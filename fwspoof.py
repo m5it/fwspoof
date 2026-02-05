@@ -8,6 +8,7 @@
 import atexit
 import traceback
 import threading
+import subprocess
 import sys, os, getopt
 import json
 import select
@@ -62,6 +63,25 @@ MemoryFlood = {
 	#"138.121":{"last_ts":0, "last_flag":"", "flag_count":0, }
 	#"138.121":{"last_ts":0, "last_flag":"[S]", "flag_count":1, }
 }
+
+def perform_whois_lookup(ip):
+	output = subprocess.check_output(['whois', ip]).decode('utf-8')
+	for line in output.split('\n'):
+		if 'CIDR' in line or 'Network Range' in line:
+			return line.strip()
+
+def perform_list_block():
+	output = subprocess.check_output(['iptables','-L','-n']).decode('utf-8')
+	for line in output.split('\n'):
+		print("perform_list_block: ",line)
+
+def block_ip_range(cidr):
+	# Block the IP range using iptables
+	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
+
+def unblock_ip_range(cidr):
+	# Unblock the IP range using iptables
+	os.system(f'iptables -D FORWARD -s {cidr}')
 
 #
 def cleaner():
@@ -183,13 +203,11 @@ def main(argv):
 	#
 	# Create a new thread that runs the my_function
 	thread = threading.Thread(target=cleaner)
-	
-	# Start the thread
 	thread.start()
 	#
-	run()
-	
-	thread.join()
+	#run()
+	perform_list_block()
+	#thread.join()
 
 #--
 if __name__ == '__main__':
