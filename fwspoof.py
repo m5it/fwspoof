@@ -80,6 +80,7 @@ def perform_list_block():
 		if rmatch(line,"^DROP.*"):
 			a = pmatch(line,r"\d+\.\d+\.\d+\.\d+(?:/\d+)?")
 			# ['45.187.56.0/22', '0.0.0.0/0']
+			print("debug len: {}, data: {}".format( len(a), a ))
 			if len(a)>0 and rmatch(line,".*\\/\\d++$"):
 				print("perform_list_block: ",a)
 #
