@@ -1,4 +1,4 @@
-import zlib
+import zlib,re
 from datetime import datetime,date
 #
 def genShortArgs(Options):
