@@ -63,3 +63,10 @@ def sortDict(a,k):
 #
 def crc32b(text):
 	return "%x"%(zlib.crc32(text.encode("utf-8")) & 0xFFFFFFFF)
+#
+def rmatch(input,regex):
+	x = re.match( regex, input )
+	if x != None:
+		return x
+	else:
+		return False

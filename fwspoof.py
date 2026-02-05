@@ -73,7 +73,8 @@ def perform_whois_lookup(ip):
 def perform_list_block():
 	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
 	for line in output.split('\n'):
-		print("perform_list_block: ",line)
+		if rmatch(line,"^DROP.*"):
+			print("perform_list_block: ",line)
 
 def block_ip_range(cidr):
 	# Block the IP range using iptables
