@@ -122,16 +122,16 @@ def load_block_list():
 #	"ftt":IP(three octets only) # From three octets we create DROP for range on /24 0-255 of forth octet! Like this we can unblock them.
 #},"last_block":cts(), "last_unblock":cts(), "blocked":True|False, "count_blocked":0, "count_unblocked":0, }
 				#
-				cts = cts()
+				ts = cts()
 				#
 				if cfto not in MemoryBlock:
 					MemoryBlock[cfto] = {
 						"fto":fto,
-						"last_block":cts,
+						"last_block":ts,
 						"ftt":{
 							cftt:{
 								"ftt":ftt,
-								"last_block":cts,
+								"last_block":ts,
 							}
 						}
 					}
