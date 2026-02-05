@@ -136,7 +136,7 @@ def load_block_list():
 						}
 					}
 				print("load_block_list() {} => {}".format( cfto, MemoryBlock[cfto] ))
-	print("load_block_list() END len {}".format( len(MemoryBlock[cfto]) ))
+	print("load_block_list() END len {}".format( len(MemoryBlock) ))
 #
 def block_ip_range(cidr):
 	# Block the IP range using iptables
