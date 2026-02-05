@@ -63,25 +63,30 @@ MemoryFlood = {
 	#"138.121":{"last_ts":0, "last_flag":"", "flag_count":0, }
 	#"138.121":{"last_ts":0, "last_flag":"[S]", "flag_count":1, }
 }
+#
+MemoryBlock = {}
 
+#
 def perform_whois_lookup(ip):
 	output = subprocess.check_output(['whois', ip]).decode('utf-8')
 	for line in output.split('\n'):
 		if 'CIDR' in line or 'Network Range' in line:
 			return line.strip()
-
+#
 def perform_list_block():
 	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
 	for line in output.split('\n'):
 		# DROP       all  --  45.187.56.0/22       0.0.0.0/0
 		if rmatch(line,"^DROP.*"):
 			a = pmatch(line,r"\d+\.\d+\.\d+\.\d+(?:/\d+)?")
-			print("perform_list_block: ",a)
-
+			# ['45.187.56.0/22', '0.0.0.0/0']
+			if len(a)>0 and rmatch(line,".*\\/\\d++$"):
+				print("perform_list_block: ",a)
+#
 def block_ip_range(cidr):
 	# Block the IP range using iptables
 	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
-
+#
 def unblock_ip_range(cidr):
 	# Unblock the IP range using iptables
 	os.system(f'iptables -D FORWARD -s {cidr}')
