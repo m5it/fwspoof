@@ -71,7 +71,7 @@ def perform_whois_lookup(ip):
 			return line.strip()
 
 def perform_list_block():
-	output = subprocess.check_output(['iptables','-L','-n']).decode('utf-8')
+	output = subprocess.check_output(['iptables','-L','-n','|','awk','/DROP/{print $4}']).decode('utf-8')
 	for line in output.split('\n'):
 		print("perform_list_block: ",line)
 
