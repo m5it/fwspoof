@@ -128,6 +128,7 @@ def load_block_list():
 					MemoryBlock[cfto] = {
 						"fto":fto,
 						"last_block":ts,
+						"cidr":a[0],
 						"ftt":{
 							cftt:{
 								"ftt":ftt,
