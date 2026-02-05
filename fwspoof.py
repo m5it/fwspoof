@@ -81,7 +81,7 @@ def perform_list_block():
 			a = pmatch(line,r"\d+\.\d+\.\d+\.\d+(?:/\d+)?")
 			# ['45.187.56.0/22', '0.0.0.0/0']
 			print("debug len: {}, data: {}".format( len(a), a ))
-			if len(a)>0 and rmatch(line,".*\\/\\d++$"):
+			if len(a)>0 and rmatch(a[0],".*\\/\\d++$"):
 				print("perform_list_block: ",a)
 #
 def block_ip_range(cidr):
