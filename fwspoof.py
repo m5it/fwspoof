@@ -1,5 +1,12 @@
+#-- (5.2.2026) - by t3ch aka B.K. => w4d4f4k at gmail dot com
+#--------------------------------------------------------------
+# FWSpoof.py - Working on cleaning of trash. Working on making trash useful. So you are welcome until you can! *** Kisses my bad friends.
+#--
+# Script to prevent spoofed attack on http server.
+# Trying to focus only on this kind of attack. For other trash have other scripts like FWTrash
 #
-# Script to prevent spoofed attach on http server.
+# At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.
+#
 # Usage:
 #     tcpdump -r out.cap -nn -s0 | python fwspoof.py
 # or
@@ -54,17 +61,32 @@ Options = {
 		'exec':VERSION,
 	},
 }
-#
+#-- Save all data and count. If they reach block value then we block them. (simple).
+#   After X time not active we unblock them! (simple).
+# hard to understand! :x
 MemoryFlood = {
 	# Ex.:
 	# If "last_flag" change then "same_flag_count" reset and start from 0
 	# key=first two octets of IP
 	# val=object
+	#--
 	#"138.121":{"last_ts":0, "last_flag":"", "flag_count":0, }
-	#"138.121":{"last_ts":0, "last_flag":"[S]", "flag_count":1, }
+	#--
+	# cftt = hash of ftt (three parts of ip)
+	#"138.121":{"last_ts":0, "last_flag":"[S]", "flag_count":1, "cftt":{
+	#    "ftt":{... same object as fto ...}
+	#}}
 }
-#
-MemoryBlock = {}
+#-- Loaded block from iptables or if we block with iptables. All is saved here!
+# hard to undersatnd too. but lets manage it!
+MemoryBlock = {
+	# Same as MemoryFlood. Key=first two octets. Ex.: 127.0.x.x
+	# One value is ftt as three octets. Ex.: 127.0.0.x
+	# Ex.:
+	# "fto":{ "cftt":{
+	#	"ftt":IP(three octets only) # From three octets we create DROP for range on /24 0-255 of forth octet! Like this we can unblock them.
+	#},"last_block":cts(), "last_unblock":cts(), "blocked":True|False, "count_blocked":0, "count_unblocked":0, }
+}
 
 #
 def perform_whois_lookup(ip):
@@ -73,7 +95,8 @@ def perform_whois_lookup(ip):
 		if 'CIDR' in line or 'Network Range' in line:
 			return line.strip()
 #
-def perform_list_block():
+def load_block_list():
+	global MemoryBlock
 	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
 	for line in output.split('\n'):
 		# DROP       all  --  45.187.56.0/22       0.0.0.0/0
@@ -81,8 +104,16 @@ def perform_list_block():
 			a = pmatch(line,r"\d+\.\d+\.\d+\.\d+(?:/\d+)?")
 			# ['45.187.56.0/22', '0.0.0.0/0']
 			print("debug len: {}, data: {}".format( len(a), a ))
+			# match cidr only. Ex.: ip/22 or ip/24 or ip/whatever because preventing spoofed attacks.
 			if len(a)>0 and rmatch(a[0],".*\\/\\d++$"):
+				# debug len: 2, data: ['37.60.250.29', '0.0.0.0/0']
+				# debug len: 2, data: ['45.156.129.52', '0.0.0.0/0']
+				# debug len: 2, data: ['45.187.56.0/22', '0.0.0.0/0']
+				# perform_list_block:  ['45.187.56.0/22', '0.0.0.0/0']
 				print("perform_list_block: ",a)
+				fto = ".".join(a[0].split(".")[:2])
+				ftt = ".".join(a[0].split(".")[:3])
+				print("load_block_list() fto: {}, ftt: {}".format( fto, ftt ))
 #
 def block_ip_range(cidr):
 	# Block the IP range using iptables
@@ -92,8 +123,9 @@ def unblock_ip_range(cidr):
 	# Unblock the IP range using iptables
 	os.system(f'iptables -D FORWARD -s {cidr}')
 
-#
-def cleaner():
+# worker check for problems on count of bad things or time on these items..
+# worker can block or unblock bad trash.
+def worker():
 	print("My function is running")
 	#
 	#mem = sorted(MemoryFlood.items(), key=lambda item:list(item[1].keys())[0])
@@ -208,14 +240,14 @@ def main(argv):
 		print("HElp!")
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
-	
+	#
+	load_block_list()
 	#
 	# Create a new thread that runs the my_function
-	thread = threading.Thread(target=cleaner)
+	thread = threading.Thread(target=worker)
 	thread.start()
 	#
-	#run()
-	perform_list_block()
+	run()
 	#thread.join()
 
 #--
