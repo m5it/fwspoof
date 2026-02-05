@@ -74,10 +74,9 @@ def perform_list_block():
 	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
 	for line in output.split('\n'):
 		# DROP       all  --  45.187.56.0/22       0.0.0.0/0
-		#if rmatch(line,"^DROP.*"):
-		#	print("perform_list_block: ",line)
-		a = pmatch(line,r"^DROP.*\d+\.\d+\.\d+\.\d+(?:/\d+)?")
-		print("perform_list_block: ",a)
+		if rmatch(line,"^DROP.*"):
+			a = pmatch(line,r"\d+\.\d+\.\d+\.\d+(?:/\d+)?")
+			print("perform_list_block: ",a)
 
 def block_ip_range(cidr):
 	# Block the IP range using iptables
