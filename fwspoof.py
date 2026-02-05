@@ -76,7 +76,7 @@ def perform_list_block():
 		# DROP       all  --  45.187.56.0/22       0.0.0.0/0
 		#if rmatch(line,"^DROP.*"):
 		#	print("perform_list_block: ",line)
-		a = pmatch(line,r"\d+\.\d+\.\d+\.\d+\/\d+")
+		a = pmatch(line,r"\d+\.\d+\.\d+\.\d+(?:/\d+)?")
 		print("perform_list_block: ",a)
 
 def block_ip_range(cidr):
