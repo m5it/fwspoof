@@ -150,16 +150,18 @@ def unblock_ip_range(cidr):
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
 def worker():
-	print("My function is running")
+	print("worker() START")
 	#
 	#mem = sorted(MemoryFlood.items(), key=lambda item:list(item[1].keys())[0])
-	print("MemoryFlood( {} ): ".format( len(MemoryFlood) ))
+	print("worker() len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
 	#
 	while True:
 		#sortDict(MemoryFlood,"flag_count")
 		sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
-			print("{} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
+			print("worker() fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
+			for k1 in MemoryFlood[k]['ftt']:
+				print("worker() ftt {} {}".format( k, MemoryFlood[k]['ftt'][k] ))
 			print("---------------------------------------------")
 		
 		print("Sleeping 3/s")
@@ -272,7 +274,7 @@ def main(argv):
 	thread.start()
 	#
 	run()
-	#thread.join()
+	thread.join()
 
 #--
 if __name__ == '__main__':
