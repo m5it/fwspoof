@@ -70,3 +70,12 @@ def rmatch(input,regex):
 		return x
 	else:
 		return False
+#
+def pmatch(input,regex):
+	ret=[]
+	a = re.findall( regex, input, flags=re.IGNORECASE )
+	#print("pmatch a: {}".format(a))
+	if a is not None:
+		for v in a:
+			ret.append( v )
+	return ret
