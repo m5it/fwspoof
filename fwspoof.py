@@ -161,7 +161,7 @@ def worker():
 		for k in reversed(MemoryFlood):
 			print("worker() fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
 			for k1 in MemoryFlood[k]['ftt']:
-				print("worker() ftt {} {}".format( k, MemoryFlood[k]['ftt'][k] ))
+				print("worker() ftt {}".format( k ))
 			print("---------------------------------------------")
 		
 		print("Sleeping 3/s")
