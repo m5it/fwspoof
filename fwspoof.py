@@ -75,6 +75,7 @@ def cleaner():
 		sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
 			print("{} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
+			print("---------------------------------------------")
 		
 		print("Sleeping 3/s")
 		time.sleep(3)
