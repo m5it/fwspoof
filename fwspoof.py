@@ -113,7 +113,30 @@ def load_block_list():
 				print("perform_list_block: ",a)
 				fto = ".".join(a[0].split(".")[:2])
 				ftt = ".".join(a[0].split(".")[:3])
+				#
+				cfto = crc32b(fto)
+				cftt = crc32b(ftt)
 				print("load_block_list() fto: {}, ftt: {}".format( fto, ftt ))
+# Ex.:
+# "fto":{ "cftt":{
+#	"ftt":IP(three octets only) # From three octets we create DROP for range on /24 0-255 of forth octet! Like this we can unblock them.
+#},"last_block":cts(), "last_unblock":cts(), "blocked":True|False, "count_blocked":0, "count_unblocked":0, }
+				#
+				cts = cts()
+				#
+				if cfto not in MemoryBlock:
+					MemoryBlock[cfto] = {
+						"fto":fto,
+						"last_block":cts,
+						"ftt":{
+							cftt:{
+								"ftt":ftt,
+								"last_block":cts,
+							}
+						}
+					}
+				print("load_block_list() {} => {}".format( cfto, MemoryBlock[cfto] ))
+	print("load_block_list() END len {}".format( len(MemoryBlock[cfto]) ))
 #
 def block_ip_range(cidr):
 	# Block the IP range using iptables
