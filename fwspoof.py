@@ -208,6 +208,7 @@ def parse( line:str ):
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
 	CDTS = cdts()
+	print("parse() fto({}): {}, ftt({}): {}".format(cfto,ftp,cftt,ftt))
 	#
 	if cfto not in MemoryFlood:
 		#
