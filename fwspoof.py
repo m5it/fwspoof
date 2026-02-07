@@ -178,7 +178,7 @@ def check_suspect():
 	#
 	while Globals['run']:
 		#sortDict(MemoryFlood,"flag_count")
-		sortDict(MemoryFlood,"last_ts")
+		#sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
 			MF = MemoryFlood[k]
 			print("check_suspect() k: {}, MF: {}".format( k, MF ))
