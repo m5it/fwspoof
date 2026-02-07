@@ -26,7 +26,7 @@ from functions import *
 
 #--
 #
-Version = "0.7331.1"
+Version = "0.1.0"
 #
 def HELP():
 	global Options
@@ -73,7 +73,6 @@ CheckBlock = {} # object of three octed of ip crc32bs. Ex.: 'crc32b'=True
 #-- MemoryFlood (used to find suspects by counting, key=flag_count and checking if flag repeats)
 #   Save all data and count. If they reach block value then we block them. (simple).
 #   After X time not active we unblock them! (simple).
-# hard to understand! :x
 MemoryFlood = {
 	# Ex.:
 	# If "last_flag" change then "same_flag_count" reset and start from 0
@@ -88,8 +87,9 @@ MemoryFlood = {
 	#}}
 }
 #-- MemoryBlock
-# Set when blocked.
-# Unset if ips dont exists between suspects
+# a.) Set when blocked.
+# b.) Set when listed from iptables
+# c.) Unset if ips dont exists between suspects ( CheckBlock object )
 MemoryBlock = {
 	#      crc32b
 	# keys = fto = {
@@ -123,7 +123,6 @@ def load_blocks():
 				cftt = crc32b(ftt)
 				print("load_block_list() fto({}): {}, ftt({}): {}".format( cfto, fto, cftt, ftt ))
 				# Save to MemoryBlock
-				#MemoryBlock[cfto] = {cftt:{"ftt":ftt,}}
 				if cfto not in MemoryBlock:
 					MemoryBlock[cfto] = {}
 				if cftt not in MemoryBlock[cfto]:
@@ -135,7 +134,11 @@ def check_blocks():
 	global MemoryBlock, MemoryFlood
 	print("check_blocks() START")
 	for k in MemoryBlock:
-		print("check_blocks() k {} = {}".format( k, MemoryBlock[k] ))
+		#print("check_blocks() k {} = {}".format( k, MemoryBlock[k] ))
+		if k not in CheckBlock:
+			print("Unblocking {}".format( MemoryBlock[k] ))
+		else:
+			print("Leaving blocked {}".format( MemoryBlock[k] ))
 #
 def block_ip_range(cidr):
 	print("block_ip_range() START, cidr: {}".format(cidr))
@@ -285,7 +288,7 @@ def parse( line:str ):
 
 
 #
-def load():
+def load_pcap():
 	global MemoryFlood, Options, Globals
 	#
 	Globals['run'] = True
@@ -335,7 +338,7 @@ def main(argv):
 	#thread = threading.Thread(target=check)
 	#thread.start()
 	#
-	load()
+	load_pcap()
 	#
 	#thread.join()
 
