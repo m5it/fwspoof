@@ -53,9 +53,9 @@ def VERSION():
 
 #--
 #
-Config = {
-	"file_block":"blocks.out",
-}
+#Config = {
+#	"file_block":"blocks.out",
+#}
 #
 Options = {
 	crc32b('-h'):{
@@ -170,8 +170,9 @@ def cleanup():
 	global Options,Stats
 	out("cleanup() START")
 	#
-	out("Stats: ")
-	print(Stats)
+	if Options[crc32b('-v')]['value']==False and Options[crc32b('-h')]['value']==False:
+		out("Stats: ")
+		print(Stats)
 	return True
 #
 def handle_exception(exc_type, exc_value, exc_traceback):
