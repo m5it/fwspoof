@@ -97,7 +97,7 @@ MemoryBlock = {
 }
 
 #
-def check_blocks():
+def load_blocks():
 	global MemoryBlock
 	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
 	for line in output.split('\n'):
@@ -119,8 +119,12 @@ def check_blocks():
 				cfto = crc32b(fto)
 				cftt = crc32b(ftt)
 				print("load_block_list() fto: {}, ftt: {}".format( fto, ftt ))
-
+				# Save to MemoryBlock
+				MemoryBlock[cfto] = {cftt:{"ftt":ftt,}}
 	print("load_block_list() END len {}".format( len(MemoryBlock) ))
+#
+def check_blocks():
+	print("check_blocks() START")
 #
 def block_ip_range(cidr):
 	print("block_ip_range() START, cidr: {}".format(cidr))
@@ -147,6 +151,15 @@ def perform_block( MF ):
 			MemoryBlock[cfto] = {cftt:{"ftt":MFF['ftt'],}}
 			# Block cidr
 			block_ip_range( cidr )
+#
+def exists_block( K, MF ):
+	global MemoryBlock
+	if K not in MemoryBlock:
+		return False
+	for k in MF['ftt']:
+		if k in MemoryBlock[K]:
+			return True
+	return False
 
 # check for problems on count of bad things or time on these items..
 # check() can block or unblock bad trash.
@@ -159,6 +172,18 @@ def check_suspect():
 		sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
 			MF = MemoryFlood[k]
+# {'fto': '177.37', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 88, 'ftt': {
+#    'cd176a0b': {'ftt': '177.37.46', 'cdts': 1770422400, 'last_ts': 40120.901163, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 119}, 
+#    '23190b27': {'ftt': '177.37.44', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39189.540114, 'last_flag': '[S]', 'flag_count': 110}, 
+#    'ba105a9d': {'ftt': '177.37.47', 'cdts': 1770422400, 'last_ts': 40115.190599, 'first_ts': 39191.390454, 'last_flag': '[S]', 'flag_count': 19}, 
+#    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
+			#
+			if exists_block(k,MF):
+				print("Already blocked!")
+				continue
+			else:
+				print("Block dont exists!")
+			#
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
 				perform_block( MF )
 				print("---------------------------------------------")
@@ -281,6 +306,7 @@ def main(argv):
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
 	#
+	load_blocks()
 	#
 	# Create a new thread that runs the my_function
 	#thread = threading.Thread(target=check)
