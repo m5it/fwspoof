@@ -100,7 +100,11 @@ MemoryBlock = {
 	#"fto":{}
 }
 #
-Stats = {}
+Stats = {
+	"all":0,
+	"blocking":0,
+	"blocked":0,
+}
 
 #--
 #
@@ -118,7 +122,7 @@ def out(text:str,opts:list={}):
 
 #
 def cleanup():
-	global Options,Stats,g_option
+	global Options,Stats
 	out("cleanup() START",{'verbose':True})
 	#
 	out("Stats: ")
@@ -227,11 +231,12 @@ def exists_block( K, MF ):
 # check for problems on count of bad things or time on these items..
 # check() can block or unblock bad trash.
 def check_suspect():
-	global MemoryFlood, MemoryBlock
+	global MemoryFlood, MemoryBlock, Stats
 	#
 	out("check_suspect() START, all: {}".format( len(MemoryFlood) ))
 	if len(MemoryFlood)<=0:
 		return False
+	Stats['all'] = len(MemoryFlood)
 	#
 	while Globals['run']:
 		#
@@ -252,6 +257,7 @@ def check_suspect():
 					#out("Already blocked! {} - {}".format( k, MF['fto'] ))
 					out("check_suspect() Adding to CheckBlock D1 k: {}".format(MF['k']))
 					CheckBlock[k]=True
+					Stats['blocked']+=1
 					continue
 				else:
 					out("Block dont exists! {} - {}".format( k, MF['fto'] ))
@@ -259,6 +265,8 @@ def check_suspect():
 				if perform_block( MF ):
 					out("check_suspect() Adding to CheckBlock D2 k: {}".format(MF['k']))
 					CheckBlock[MF['k']]=True
+					Stats['blocking']+=1
+					Stats['blocked']-=1
 				out("---------------------------------------------")
 			else:
 				out("check_suspect() OK {}".format( MF ))
