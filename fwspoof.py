@@ -181,6 +181,7 @@ def check_suspect():
 		sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
 			MF = MemoryFlood[k]
+			print("check_suspect() k: {}, MF: {}".format( k, MF ))
 # {'fto': '177.37', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 88, 'ftt': {
 #    'cd176a0b': {'ftt': '177.37.46', 'cdts': 1770422400, 'last_ts': 40120.901163, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 119}, 
 #    '23190b27': {'ftt': '177.37.44', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39189.540114, 'last_flag': '[S]', 'flag_count': 110}, 
