@@ -42,14 +42,14 @@ Version = "0.1.0"
 #
 def HELP():
 	global Options
-	out("HELP....\n")
+	print("HELP....\n")
 	for k in Options:
 		o=Options[k]
-		out("{} => {}".format( o['short'], o['name'] ))
+		print("{} => {}".format( o['short'], o['name'] ))
 #
 def VERSION():
 	global Version
-	out("v{}".format(Version))
+	print("v{}".format(Version))
 
 #--
 #
