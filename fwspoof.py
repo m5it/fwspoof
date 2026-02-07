@@ -153,7 +153,7 @@ def unblock_ip_range(cidr):
 #
 def perform_block( MF ):
 	for k in MF['ftt']:
-		print("perform_block() ftt {} => {}".format( k, MF[k] ))
+		print("perform_block() ftt {} => {}".format( k, MF['ftt'][k] ))
 
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
