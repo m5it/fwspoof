@@ -170,7 +170,7 @@ def cleanup():
 	global Options,Stats
 	out("cleanup() START")
 	#
-	if Options[crc32b('-v')]['value']==False and Options[crc32b('-h')]['value']==False:
+	if Options[crc32b('-v')]['value']==False or Options[crc32b('-h')]['value']==False:
 		out("Stats: ")
 		print(Stats)
 	return True
