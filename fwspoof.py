@@ -118,7 +118,7 @@ def load_blocks():
 				#
 				cfto = crc32b(fto)
 				cftt = crc32b(ftt)
-				print("load_block_list() fto: {}, ftt: {}".format( fto, ftt ))
+				print("load_block_list() fto({}): {}, ftt({}): {}".format( cfto, fto, cftt, ftt ))
 				# Save to MemoryBlock
 				MemoryBlock[cfto] = {cftt:{"ftt":ftt,}}
 	print("load_block_list() END len {}".format( len(MemoryBlock) ))
