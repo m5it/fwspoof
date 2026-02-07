@@ -41,7 +41,9 @@ def VERSION():
 
 #--
 #
-Config = {}
+Config = {
+	"file_block":"blocks.out",
+}
 #
 Options = {
 	crc32b('-h'):{
@@ -171,8 +173,9 @@ def perform_block( MF ):
 			save_mff( MFF )
 #
 def save_mff( MFF ):
+	global Config
 	print("save_mff() START, MFF: {}".format(MFF))
-	file_write( Options[], "{}\n".format(json.dumps(MFF)) )
+	file_write( Config['file_block'], "{}\n".format(json.dumps(MFF)) )
 
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
