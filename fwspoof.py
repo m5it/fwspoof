@@ -191,14 +191,15 @@ def check_suspect():
 #    'ba105a9d': {'ftt': '177.37.47', 'cdts': 1770422400, 'last_ts': 40115.190599, 'first_ts': 39191.390454, 'last_flag': '[S]', 'flag_count': 19}, 
 #    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
 			#
-			if exists_block(k,MF):
-				print("Already blocked! {} - {}".format( k, MF['fto'] ))
-				continue
-			else:
-				print("Block dont exists! {} - {}".format( k, MF['fto'] ))
-			#
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
 				print("check_suspect() k: {}, MF: {}".format( k, MF ))
+				#
+				if exists_block(k,MF):
+					print("Already blocked! {} - {}".format( k, MF['fto'] ))
+					continue
+				else:
+					print("Block dont exists! {} - {}".format( k, MF['fto'] ))
+				#
 				perform_block( MF )
 				print("---------------------------------------------")
 		Globals['run'] = False
