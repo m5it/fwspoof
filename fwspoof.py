@@ -4,7 +4,8 @@
 # FWSpoof.py - Working on cleaning of trash. Working on making trash useful. So you are welcome until you can! *** Kisses my bad friends.
 #--
 # Script to prevent spoofed attack on http server.
-# Trying to focus only on this kind of attack. For other trash have other scripts like FWTrash
+# Trying to focus only on this kind of attack. For other trash have other scripts like FWTrash.
+# This kind of attack is not visible in normal logs of http servers because if this is necessary to use tools like tcpdump, wireshark or similar.
 #
 # At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.
 #--
@@ -335,6 +336,10 @@ def parse( line:str ):
 	#
 	fto = ".".join(a[2].split(".")[:2]) # First two octets of IP
 	ftt = ".".join(a[2].split(".")[:3]) # First three octets of IP
+	#
+	sip = ".".join(a[2].split(".")[:4]) # source ip
+	dip = ".".join(a[4].split(".")[:4]) # source ip
+	out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	#
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
