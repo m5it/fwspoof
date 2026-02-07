@@ -237,6 +237,7 @@ def check_blocks():
 			for k1 in MemoryBlock[k]:
 				o = MemoryBlock[k][k1]
 				out("unblocking {}".format( o['cidr'] ))
+				unblock_ip_range( o['cidr'] )
 		else:
 			# Leaving blocked {'1a17d3cc': {'ftt': '201.49.136', 'cidr': '201.49.136.0/24'}, '8aa8ce5d': {'ftt': '201.49.139', 'cidr': '201.49.139.0/24'}, 'fdaffecb': {'ftt': '201.49.138', 'cidr': '201.49.138.0/24'}, '6d10e35a': {'ftt': '201.49.137', 'cidr': '201.49.137.0/24'}}
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
