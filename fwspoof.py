@@ -219,7 +219,7 @@ def parse( line:str ):
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
 	CDTS = cdts()
-	#print("parse() fto({}): {}, ftt({}): {}".format(cfto,fto,cftt,ftt))
+	print("parse() fto({}): {}, ftt({}): {}".format(cfto,fto,cftt,ftt))
 	#
 	if cfto not in MemoryFlood:
 		#
@@ -231,16 +231,26 @@ def parse( line:str ):
 			"last_flag":a[6][:-1],
 			"flag_count":1,
 			"ftt":{
-				cftt:{
-					"ftt"     :ftt,
-					"cdts"    :CDTS,
-					"last_ts" :tots(a[0]),
-					"first_ts":tots(a[0]),
-					"last_flag":a[6][:-1],
-					"flag_count":1,
-				}
+				# cftt:{
+					# "ftt"     :ftt,
+					# "cdts"    :CDTS,
+					# "last_ts" :tots(a[0]),
+					# "first_ts":tots(a[0]),
+					# "last_flag":a[6][:-1],
+					# "flag_count":1,
+				# }
 			}
 		}
+		#
+		if cftt not in MemoryFlood[cfto]['ftt']:
+			MemoryFlood[cfto]['ftt'][cftt] = {
+				"ftt"     :ftt,
+				"cdts"    :CDTS,
+				"last_ts" :tots(a[0]),
+				"first_ts":tots(a[0]),
+				"last_flag":a[6][:-1],
+				"flag_count":1,
+			}
 	else:
 		# Flag is the same as previous was! (Warning)
 		if MemoryFlood[cfto]["last_flag"] == a[6][:-1]:
