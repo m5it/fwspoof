@@ -201,7 +201,11 @@ def parse( line:str ):
 	# Normaly same numbers are Ex.: 138.121.x.x
 	# 
 	# ['14:50:53.440085', 'IP', '138.121.247.153.35544', '>', '192.168.0.69.443:', 'Flags', '[S],', 'seq', '3300412588,', 'win', '64240,', 'options', '[mss', '1300,nop,wscale', '8,nop,nop,sackOK],', 'length', '0\n']
-	print("run() line",line);
+	#print("run() line",line);
+	
+	#run() line 12:05:54.906213 IP 177.37.46.55.19974 > 192.168.0.69.443: Flags [S], seq 1823246134, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
+	#parse() fto(7e1c7af0): 177.37, ftt(cd176a0b): 177.37.46
+
 	a = line.split(" ")
 	#
 	fto = ".".join(a[2].split(".")[:2]) # First two octets of IP
@@ -210,7 +214,7 @@ def parse( line:str ):
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
 	CDTS = cdts()
-	print("parse() fto({}): {}, ftt({}): {}".format(cfto,fto,cftt,ftt))
+	#print("parse() fto({}): {}, ftt({}): {}".format(cfto,fto,cftt,ftt))
 	#
 	if cfto not in MemoryFlood:
 		#
