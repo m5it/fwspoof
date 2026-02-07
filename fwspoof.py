@@ -67,7 +67,8 @@ Options = {
 Globals = {
 	"run":False,
 }
-#-- Save all data and count. If they reach block value then we block them. (simple).
+#-- MemoryFlood (used to find suspects by counting, key=flag_count and checking if flag repeats)
+#   Save all data and count. If they reach block value then we block them. (simple).
 #   After X time not active we unblock them! (simple).
 # hard to understand! :x
 MemoryFlood = {
@@ -83,25 +84,20 @@ MemoryFlood = {
 	#    "ftt":{... same object as fto ...}
 	#}}
 }
-#-- Loaded block from iptables or if we block with iptables. All is saved here!
-# hard to undersatnd too. but lets manage it!
+#-- MemoryBlock
+# Set when blocked.
+# Unset if ips dont exists between suspects
 MemoryBlock = {
-	# Same as MemoryFlood. Key=first two octets. Ex.: 127.0.x.x
-	# One value is ftt as three octets. Ex.: 127.0.0.x
-	# Ex.:
-	# "fto":{ "cftt":{
-	#	"ftt":IP(three octets only) # From three octets we create DROP for range on /24 0-255 of forth octet! Like this we can unblock them.
-	#},"last_block":cts(), "last_unblock":cts(), "blocked":True|False, "count_blocked":0, "count_unblocked":0, }
+	#      crc32b
+	# keys = fto = {
+		#       crc32b
+		# keys = ftt = {"ftt":"first_three_octet_of_ip",}
+	#}
+	#"fto":{}
 }
 
 #
-def perform_whois_lookup(ip):
-	output = subprocess.check_output(['whois', ip]).decode('utf-8')
-	for line in output.split('\n'):
-		if 'CIDR' in line or 'Network Range' in line:
-			return line.strip()
-#
-def load_blocks():
+def check_blocks():
 	global MemoryBlock
 	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
 	for line in output.split('\n'):
@@ -123,29 +119,11 @@ def load_blocks():
 				cfto = crc32b(fto)
 				cftt = crc32b(ftt)
 				print("load_block_list() fto: {}, ftt: {}".format( fto, ftt ))
-# Ex.:
-# "fto":{ "cftt":{
-#	"ftt":IP(three octets only) # From three octets we create DROP for range on /24 0-255 of forth octet! Like this we can unblock them.
-#},"last_block":cts(), "last_unblock":cts(), "blocked":True|False, "count_blocked":0, "count_unblocked":0, }
-				#
-				ts = cts()
-				#
-				if cfto not in MemoryBlock:
-					MemoryBlock[cfto] = {
-						"fto":fto,
-						"last_block":ts,
-						"cidr":a[0],
-						"ftt":{
-							cftt:{
-								"ftt":ftt,
-								"last_block":ts,
-							}
-						}
-					}
-				print("load_block_list() {} => {}".format( cfto, MemoryBlock[cfto] ))
+
 	print("load_block_list() END len {}".format( len(MemoryBlock) ))
 #
 def block_ip_range(cidr):
+	print("block_ip_range() START, cidr: {}".format(cidr))
 	# Block the IP range using iptables
 	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
 #
@@ -154,32 +132,25 @@ def unblock_ip_range(cidr):
 	os.system(f'iptables -D FORWARD -s {cidr}')
 #
 def perform_block( MF ):
+	global MemoryBlock
 	print("perform_block() START MF: ",MF)
 	#
-	cfto = crc32b(MF['fto'])
+	cfto = crc32b(MF['fto']) # cfto is crc32b of first two octet of ip
 	#
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
 		if MFF['flag_count'] >= 5:
 			print("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
 			cidr = "{}.0/24".format( MFF['ftt'] )
-			#cftt = k
+			cftt = k # cftt is crc32b of first three octet of ip
+			# Save to MemoryBlock
+			MemoryBlock[cfto] = {cftt={"ftt":MFF['ftt'],}}
 			# Block cidr
-			#block_ip_range( cidr )
-			# Save MFF. MFF Example:
-			# {'ftt': '168.195.140', 'cdts': 1770422400, 'last_ts': 32082.477912, 'first_ts': 31983.891848, 'last_flag': '[S]', 'flag_count': 28, 'cidr':'168.195.140.0/24', 'block_ts':1770456500.7925544,}
-			MFF['cidr']     = cidr
-			MFF['block_ts'] = time.time()
-			save_mff( MFF )
-#
-def save_mff( MFF ):
-	global Config
-	print("save_mff() START, MFF: {}".format(MFF))
-	file_write( Config['file_block'], "{}\n".format(json.dumps(MFF)) )
+			block_ip_range( cidr )
 
-# worker check for problems on count of bad things or time on these items..
-# worker can block or unblock bad trash.
-def check():
+# check for problems on count of bad things or time on these items..
+# check() can block or unblock bad trash.
+def check_suspect():
 	global Globals
 	print("check() START len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
 	#
@@ -189,27 +160,10 @@ def check():
 		for k in reversed(MemoryFlood):
 			MF = MemoryFlood[k]
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
-				#print("worker() BLOCKing: fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
-				#for k1 in MemoryFlood[k]['ftt']:
-				#	print("worker() ftt {} => {}".format( k1, MemoryFlood[k]['ftt'][k1] ))
 				perform_block( MF )
 				print("---------------------------------------------")
-		
-		#print("Sleeping 3/s")
 		Globals['run'] = False
-		#time.sleep(3)
 
-#
-def load():
-	global MemoryFlood, Options, Globals
-	#
-	Globals['run'] = True
-	#
-	for line in sys.stdin:
-		parse( line )
-	#
-	check()
-	Globals['run'] = False
 #
 def parse( line:str ):
 	# line Ex.: run() line 14:50:53.440085 IP 138.121.247.153.35544 > 192.168.0.69.443: Flags [S], seq 3300412588, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
@@ -280,6 +234,22 @@ def parse( line:str ):
 			}
 		#
 		MemoryFlood[cfto]["ftt"] = oftt
+
+
+#
+def load():
+	global MemoryFlood, Options, Globals
+	#
+	Globals['run'] = True
+	#
+	for line in sys.stdin:
+		parse( line )
+	#
+	check_suspect()
+	#
+	check_blocks()
+	Globals['run'] = False
+
 #
 def main(argv):
 	global Options, MemoryFlood
