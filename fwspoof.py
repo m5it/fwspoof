@@ -67,6 +67,9 @@ Options = {
 Globals = {
 	"run":False,
 }
+#--
+#
+CheckBlock = {} # object of three octed of ip crc32bs. Ex.: 'crc32b'=True
 #-- MemoryFlood (used to find suspects by counting, key=flag_count and checking if flag repeats)
 #   Save all data and count. If they reach block value then we block them. (simple).
 #   After X time not active we unblock them! (simple).
@@ -132,7 +135,7 @@ def check_blocks():
 	global MemoryBlock, MemoryFlood
 	print("check_blocks() START")
 	for k in MemoryBlock:
-		print("check_blocks() k {}".format( k ))
+		print("check_blocks() k {} = {}".format( k, MemoryBlock[k] ))
 #
 def block_ip_range(cidr):
 	print("block_ip_range() START, cidr: {}".format(cidr))
@@ -159,6 +162,8 @@ def perform_block( MF ):
 			MemoryBlock[cfto] = {cftt:{"ftt":MFF['ftt'],}}
 			# Block cidr
 			block_ip_range( cidr )
+			return True
+	return False
 #
 def exists_block( K, MF ):
 	global MemoryBlock
@@ -175,14 +180,11 @@ def exists_block( K, MF ):
 # check() can block or unblock bad trash.
 def check_suspect():
 	global MemoryFlood, MemoryBlock
-	#print("check_suspect() START len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
-	#print("check_suspect() DEBUG MemoryBlock: ")
-	#print(MemoryBlock)
 	#
 	while Globals['run']:
-		#sortDict(MemoryFlood,"flag_count")
-		#sortDict(MemoryFlood,"last_ts")
-		for k in reversed(MemoryFlood):
+		#
+		#for k in reversed(MemoryFlood):
+		for k in MemoryFlood:
 			MF = MemoryFlood[k]
 			#print("check_suspect() k: {}, MF: {}".format( k, MF ))
 # {'fto': '177.37', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 88, 'ftt': {
@@ -195,24 +197,21 @@ def check_suspect():
 				print("check_suspect() k: {}, MF: {}".format( k, MF ))
 				#
 				if exists_block(k,MF):
-					print("Already blocked! {} - {}".format( k, MF['fto'] ))
+					#print("Already blocked! {} - {}".format( k, MF['fto'] ))
+					print("check_suspect() Adding to CheckBlock D1 k: {}".format(MF['k']))
+					CheckBlock[k]=True
 					continue
 				else:
 					print("Block dont exists! {} - {}".format( k, MF['fto'] ))
 				#
-				perform_block( MF )
+				if perform_block( MF ):
+					print("check_suspect() Adding to CheckBlock D2 k: {}".format(MF['k']))
+					CheckBlock[MF['k']]=True
 				print("---------------------------------------------")
 		Globals['run'] = False
 
 #
 def parse( line:str ):
-	# line Ex.: run() line 14:50:53.440085 IP 138.121.247.153.35544 > 192.168.0.69.443: Flags [S], seq 3300412588, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
-	# spoofed ips Ex.: 138.121.247.153
-	# Normaly same numbers are Ex.: 138.121.x.x
-	# 
-	# ['14:50:53.440085', 'IP', '138.121.247.153.35544', '>', '192.168.0.69.443:', 'Flags', '[S],', 'seq', '3300412588,', 'win', '64240,', 'options', '[mss', '1300,nop,wscale', '8,nop,nop,sackOK],', 'length', '0\n']
-	#print("run() line",line);
-	
 	#run() line 12:05:54.906213 IP 177.37.46.55.19974 > 192.168.0.69.443: Flags [S], seq 1823246134, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
 	#parse() fto(7e1c7af0): 177.37, ftt(cd176a0b): 177.37.46
 
@@ -224,12 +223,12 @@ def parse( line:str ):
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
 	CDTS = cdts()
-	#print("parse() fto({}): {}, ftt({}): {}".format(cfto,fto,cftt,ftt))
 	#
 	if cfto not in MemoryFlood:
 		#
 		MemoryFlood[cfto] = {
 			"fto"     :fto,
+			"k"       :cfto,
 			"cdts"    :CDTS,
 			"last_ts" :tots(a[0]),
 			"first_ts":tots(a[0]),
@@ -238,6 +237,7 @@ def parse( line:str ):
 			"ftt":{
 				cftt:{
 					"ftt"     :ftt,
+					"k"       :cftt,
 					"cdts"    :CDTS,
 					"last_ts" :tots(a[0]),
 					"first_ts":tots(a[0]),
@@ -271,6 +271,7 @@ def parse( line:str ):
 			# cftt dont exists
 			oftt[cftt] = {
 				"ftt":ftt,
+				"k"  :cftt,
 				"cdts"    :CDTS,
 				"last_ts" :tots(a[0]),
 				"first_ts":tots(a[0]),
