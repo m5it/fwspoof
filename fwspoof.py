@@ -144,7 +144,7 @@ def perform_block( MF ):
 			cidr = "{}.0/24".format( MFF['ftt'] )
 			cftt = k # cftt is crc32b of first three octet of ip
 			# Save to MemoryBlock
-			MemoryBlock[cfto] = {cftt={"ftt":MFF['ftt'],}}
+			MemoryBlock[cfto] = {cftt:{"ftt":MFF['ftt'],}}
 			# Block cidr
 			block_ip_range( cidr )
 
