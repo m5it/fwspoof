@@ -246,7 +246,7 @@ def check_suspect():
 #    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
 			#
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
-				out("check_suspect() k: {}, MF: {}".format( k, MF ))
+				out("check_suspect() WARNING k: {}, MF: {}".format( k, MF ))
 				#
 				if exists_block(k,MF):
 					#out("Already blocked! {} - {}".format( k, MF['fto'] ))
@@ -260,6 +260,8 @@ def check_suspect():
 					out("check_suspect() Adding to CheckBlock D2 k: {}".format(MF['k']))
 					CheckBlock[MF['k']]=True
 				out("---------------------------------------------")
+			else:
+				out("check_suspect() OK {}".format( MF ))
 		Globals['run'] = False
 	return True
 
