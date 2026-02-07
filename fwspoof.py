@@ -150,6 +150,10 @@ def block_ip_range(cidr):
 def unblock_ip_range(cidr):
 	# Unblock the IP range using iptables
 	os.system(f'iptables -D FORWARD -s {cidr}')
+#
+def perform_block( MF ):
+	for k in MF['ftt']:
+		print("perform_block() ftt {} => {}".format( k, MF[k] ))
 
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
@@ -166,9 +170,10 @@ def check():
 		for k in reversed(MemoryFlood):
 			MF = MemoryFlood[k]
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
-				print("worker() BLOCKing: fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
-				for k1 in MemoryFlood[k]['ftt']:
-					print("worker() ftt {} => {}".format( k1, MemoryFlood[k]['ftt'][k1] ))
+				#print("worker() BLOCKing: fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
+				#for k1 in MemoryFlood[k]['ftt']:
+				#	print("worker() ftt {} => {}".format( k1, MemoryFlood[k]['ftt'][k1] ))
+				perform_block( MF )
 				print("---------------------------------------------")
 		
 		print("Sleeping 3/s")
