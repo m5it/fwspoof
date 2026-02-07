@@ -165,7 +165,7 @@ def check():
 		sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
 			MF = MemoryFlood[k]
-			if MF['flag_count']=='[S]' and MF['flag_count'] >= 20:
+			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
 				print("worker() BLOCKing: fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
 				for k1 in MemoryFlood[k]['ftt']:
 					print("worker() ftt {} => {}".format( k1, MemoryFlood[k]['ftt'][k1] ))
