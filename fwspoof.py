@@ -146,6 +146,7 @@ MemoryBlock = {
 #
 Stats = {
 	"all":0,
+	"uniq":0,
 	"blocking":0,
 	"unblocking":0,
 	"blocked":0,
@@ -290,7 +291,7 @@ def check_suspect():
 	out("check_suspect() START, all: {}".format( len(MemoryFlood) ))
 	if len(MemoryFlood)<=0:
 		return False
-	Stats['all'] = len(MemoryFlood)
+	Stats['uniq'] = len(MemoryFlood)
 	#
 	while Globals['run']:
 		#
@@ -340,6 +341,7 @@ def parse( line:str ):
 	sip = ".".join(a[2].split(".")[:4]) # source ip
 	dip = ".".join(a[4].split(".")[:4]) # source ip
 	out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
+	Stats["all"]+=1
 	#
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
