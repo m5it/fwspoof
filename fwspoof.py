@@ -153,16 +153,17 @@ def unblock_ip_range(cidr):
 #
 def perform_block( MF ):
 	for k in MF['ftt']:
-		print("perform_block() ftt {} => {}".format( k, MF['ftt'][k] ))
+		MFF = MF['ftt'][k]
+		if MFF['flag_count'] >= 5:
+			print("perform_block() BLOCK ftt {} => {}".format( k, MF['ftt'][k] ))
+		else:
+			print("perform_block() SKIP ftt {} => {}".format( k, MF['ftt'][k] ))
 
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
 def check():
 	global Globals
-	print("worker() START")
-	#
-	#mem = sorted(MemoryFlood.items(), key=lambda item:list(item[1].keys())[0])
-	print("worker() len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
+	print("check() START len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
 	#
 	while Globals['run']:
 		#sortDict(MemoryFlood,"flag_count")
