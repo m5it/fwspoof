@@ -161,7 +161,7 @@ def worker():
 		for k in reversed(MemoryFlood):
 			print("worker() fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
 			for k1 in MemoryFlood[k]['ftt']:
-				print("worker() ftt {}".format( k ))
+				print("worker() ftt {} => {}".format( k1, MemoryFlood[k]['ftt'][k1] ))
 			print("---------------------------------------------")
 		
 		print("Sleeping 3/s")
@@ -262,7 +262,8 @@ def main(argv):
 	except getopt.GetoptError:
 		opt_help = True
 	#
-	if opt_help:
+	#if opt_help:
+	if Options[crc32b('-h')]['value']:
 		print("HElp!")
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
@@ -274,6 +275,7 @@ def main(argv):
 	thread.start()
 	#
 	run()
+	#
 	thread.join()
 
 #--
