@@ -244,8 +244,8 @@ def run():
 			#
 			MemoryFlood[cfto]["ftt"] = oftt
 	#
-	Globals['run'] = False
 	worker()
+	Globals['run'] = False
 
 #
 def main(argv):
