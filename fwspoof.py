@@ -281,7 +281,6 @@ def main(argv):
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
 	#
-	load_blocks()
 	#
 	# Create a new thread that runs the my_function
 	#thread = threading.Thread(target=check)
