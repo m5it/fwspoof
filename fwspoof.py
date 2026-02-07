@@ -127,7 +127,7 @@ def load_blocks():
 				if cfto not in MemoryBlock:
 					MemoryBlock[cfto] = {}
 				if cftt not in MemoryBlock[cfto]:
-					MemoryBlock[cfto][cftt] = {"ftt":ftt,}
+					MemoryBlock[cfto][cftt] = {"ftt":ftt,"cidr":a[0],}
 	print("load_block_list() END len {}".format( len(MemoryBlock) ))
 	print(MemoryBlock)
 #
@@ -180,6 +180,8 @@ def exists_block( K, MF ):
 # check() can block or unblock bad trash.
 def check_suspect():
 	global MemoryFlood, MemoryBlock
+	#
+	print("check_suspect() START, all: {}".format( len(MemoryFlood) ))
 	#
 	while Globals['run']:
 		#
