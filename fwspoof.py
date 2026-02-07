@@ -124,7 +124,7 @@ def load_blocks():
 				if cfto not in MemoryBlock:
 					MemoryBlock[cfto] = {}
 				if cftt not in MemoryBlock[cfto]:
-					MemoryBlock[cfto] = {cftt:{"ftt":ftt,}}
+					MemoryBlock[cfto][cftt] = {"ftt":ftt,}
 	print("load_block_list() END len {}".format( len(MemoryBlock) ))
 	print(MemoryBlock)
 #
