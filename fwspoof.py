@@ -153,7 +153,7 @@ def unblock_ip_range(cidr):
 
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
-def worker():
+def check():
 	global Globals
 	print("worker() START")
 	#
@@ -174,80 +174,86 @@ def worker():
 		#time.sleep(3)
 
 #
-def run():
+def load():
 	global MemoryFlood, Options, Globals
 	#
 	Globals['run'] = True
 	#
 	for line in sys.stdin:
-		# line Ex.: run() line 14:50:53.440085 IP 138.121.247.153.35544 > 192.168.0.69.443: Flags [S], seq 3300412588, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
-		# spoofed ips Ex.: 138.121.247.153
-		# Normaly same numbers are Ex.: 138.121.x.x
-		# 
-		# ['14:50:53.440085', 'IP', '138.121.247.153.35544', '>', '192.168.0.69.443:', 'Flags', '[S],', 'seq', '3300412588,', 'win', '64240,', 'options', '[mss', '1300,nop,wscale', '8,nop,nop,sackOK],', 'length', '0\n']
-		print("run() line",line);
-		a = line.split(" ")
+		parse( line )
+	#
+	check()
+	Globals['run'] = False
+#
+def parse( line:str ):
+	# line Ex.: run() line 14:50:53.440085 IP 138.121.247.153.35544 > 192.168.0.69.443: Flags [S], seq 3300412588, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
+	# spoofed ips Ex.: 138.121.247.153
+	# Normaly same numbers are Ex.: 138.121.x.x
+	# 
+	# ['14:50:53.440085', 'IP', '138.121.247.153.35544', '>', '192.168.0.69.443:', 'Flags', '[S],', 'seq', '3300412588,', 'win', '64240,', 'options', '[mss', '1300,nop,wscale', '8,nop,nop,sackOK],', 'length', '0\n']
+	print("run() line",line);
+	a = line.split(" ")
+	#
+	fto = ".".join(a[2].split(".")[:2]) # First two octets of IP
+	ftt = ".".join(a[2].split(".")[:3]) # First three octets of IP
+	#
+	cfto = crc32b(fto)
+	cftt = crc32b(ftt)
+	CDTS = cdts()
+	#
+	if cfto not in MemoryFlood:
 		#
-		fto = ".".join(a[2].split(".")[:2]) # First two octets of IP
-		ftt = ".".join(a[2].split(".")[:3]) # First three octets of IP
-		#
-		cfto = crc32b(fto)
-		cftt = crc32b(ftt)
-		#
-		if cfto not in MemoryFlood:
-			#
-			MemoryFlood[cfto] = {
-				"fto":fto,
-				"last_ts" :tots(a[0]),
-				"first_ts":tots(a[0]),
-				"last_flag":a[6][:-1],
-				"flag_count":1,
-				"ftt":{
-					cftt:{
-						"ftt":ftt,
-						"last_ts" :tots(a[0]),
-						"first_ts":tots(a[0]),
-						"last_flag":a[6][:-1],
-						"flag_count":1,
-					}
-				}
-			}
-		else:
-			# Flag is the same as previous was! (Warning)
-			if MemoryFlood[cfto]["last_flag"] == a[6][:-1]:
-				MemoryFlood[cfto]["last_ts"]    = tots(a[0])
-				MemoryFlood[cfto]["flag_count"] += 1
-			else:
-				MemoryFlood[cfto]["last_ts"]    = tots(a[0])
-				MemoryFlood[cfto]["flag_count"] = 1
-				MemoryFlood[cfto]["last_flag"] = a[6][:-1]
-			# # Check third octet
-			oftt = MemoryFlood[cfto]["ftt"]
-			if cftt in oftt:
-				# cftt exists
-				if oftt[cftt]["last_flag"] == a[6][:-1]:
-					# same flag, increase count
-					oftt[cftt]["last_ts"]    = tots(a[0])
-					oftt[cftt]["flag_count"] += 1
-				else:
-					# flag change, zerro count
-					oftt[cftt]["last_ts"]    = tots(a[0])
-					oftt[cftt]["flag_count"] = 1
-			else:
-				# cftt dont exists
-				oftt[cftt] = {
-					"ftt":ftt,
+		MemoryFlood[cfto] = {
+			"fto"     :fto,
+			"cdts"    :CDTS,
+			"last_ts" :tots(a[0]),
+			"first_ts":tots(a[0]),
+			"last_flag":a[6][:-1],
+			"flag_count":1,
+			"ftt":{
+				cftt:{
+					"ftt"     :ftt,
+					"cdts"    :CDTS,
 					"last_ts" :tots(a[0]),
 					"first_ts":tots(a[0]),
 					"last_flag":a[6][:-1],
 					"flag_count":1,
 				}
-			#
-			MemoryFlood[cfto]["ftt"] = oftt
-	#
-	worker()
-	Globals['run'] = False
-
+			}
+		}
+	else:
+		# Flag is the same as previous was! (Warning)
+		if MemoryFlood[cfto]["last_flag"] == a[6][:-1]:
+			MemoryFlood[cfto]["last_ts"]    = tots(a[0])
+			MemoryFlood[cfto]["flag_count"] += 1
+		else:
+			MemoryFlood[cfto]["last_ts"]    = tots(a[0])
+			MemoryFlood[cfto]["flag_count"] = 1
+			MemoryFlood[cfto]["last_flag"] = a[6][:-1]
+		# # Check third octet
+		oftt = MemoryFlood[cfto]["ftt"]
+		if cftt in oftt:
+			# cftt exists
+			if oftt[cftt]["last_flag"] == a[6][:-1]:
+				# same flag, increase count
+				oftt[cftt]["last_ts"]    = tots(a[0])
+				oftt[cftt]["flag_count"] += 1
+			else:
+				# flag change, zerro count
+				oftt[cftt]["last_ts"]    = tots(a[0])
+				oftt[cftt]["flag_count"] = 1
+		else:
+			# cftt dont exists
+			oftt[cftt] = {
+				"ftt":ftt,
+				"cdts"    :CDTS,
+				"last_ts" :tots(a[0]),
+				"first_ts":tots(a[0]),
+				"last_flag":a[6][:-1],
+				"flag_count":1,
+			}
+		#
+		MemoryFlood[cfto]["ftt"] = oftt
 #
 def main(argv):
 	global Options, MemoryFlood
@@ -282,10 +288,10 @@ def main(argv):
 	load_block_list()
 	#
 	# Create a new thread that runs the my_function
-	#thread = threading.Thread(target=worker)
+	#thread = threading.Thread(target=check)
 	#thread.start()
 	#
-	run()
+	load()
 	#
 	#thread.join()
 
