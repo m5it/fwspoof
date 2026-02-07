@@ -222,7 +222,8 @@ def load_blocks():
 					MemoryBlock[cfto][cftt] = {"ftt":ftt,"cidr":a[0],}
 	out("load_blocks() END len {}".format( len(MemoryBlock) ))
 	out(MemoryBlock)
-#
+#-- check_blocks()
+# used to unblock suspects when dont attacking anymore.
 def check_blocks():
 	global MemoryBlock, CheckBlock, Stats
 	out("check_blocks() START")
@@ -231,8 +232,15 @@ def check_blocks():
 		if k not in CheckBlock:
 			out("Unblocking {}".format( MemoryBlock[k] ))
 			Stats['unblocking']+=1
+			for k1 in MemoryBlock[k]:
+				o = MemoryBlock[k][k1]
+				print("unblocking {}".format( o['cidr'] ))
 		else:
+			# Leaving blocked {'1a17d3cc': {'ftt': '201.49.136', 'cidr': '201.49.136.0/24'}, '8aa8ce5d': {'ftt': '201.49.139', 'cidr': '201.49.139.0/24'}, 'fdaffecb': {'ftt': '201.49.138', 'cidr': '201.49.138.0/24'}, '6d10e35a': {'ftt': '201.49.137', 'cidr': '201.49.137.0/24'}}
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
+			for k1 in MemoryBlock[k]:
+				o = MemoryBlock[k][k1]
+				print("test unblocking {}".format( o['cidr'] ))
 #
 def block_ip_range(cidr):
 	out("block_ip_range() START, cidr: {}".format( cidr ))
