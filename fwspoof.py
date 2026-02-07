@@ -129,7 +129,10 @@ def load_blocks():
 	print(MemoryBlock)
 #
 def check_blocks():
+	global MemoryBlock, MemoryFlood
 	print("check_blocks() START")
+	for k in MemoryBlock:
+		print("check_blocks() k {}".format( k ))
 #
 def block_ip_range(cidr):
 	print("block_ip_range() START, cidr: {}".format(cidr))
@@ -142,7 +145,7 @@ def unblock_ip_range(cidr):
 #
 def perform_block( MF ):
 	global MemoryBlock
-	print("perform_block() START MF: ",MF)
+	#print("perform_block() START MF: ",MF)
 	#
 	cfto = crc32b(MF['fto']) # cfto is crc32b of first two octet of ip
 	#
@@ -160,10 +163,10 @@ def perform_block( MF ):
 def exists_block( K, MF ):
 	global MemoryBlock
 	if K not in MemoryBlock:
-		print("exists_block() K: {} not in MemoryBlock!".format( K ))
+		#print("exists_block() K: {} not in MemoryBlock!".format( K ))
 		return False
 	for k in MF['ftt']:
-		print("exists_block() checking k: {} vs {}".format( k, MemoryBlock[K] ))
+		#print("exists_block() checking k: {} vs {}".format( k, MemoryBlock[K] ))
 		if k in MemoryBlock[K]:
 			return True
 	return False
@@ -172,16 +175,16 @@ def exists_block( K, MF ):
 # check() can block or unblock bad trash.
 def check_suspect():
 	global MemoryFlood, MemoryBlock
-	print("check_suspect() START len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
-	print("check_suspect() DEBUG MemoryBlock: ")
-	print(MemoryBlock)
+	#print("check_suspect() START len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
+	#print("check_suspect() DEBUG MemoryBlock: ")
+	#print(MemoryBlock)
 	#
 	while Globals['run']:
 		#sortDict(MemoryFlood,"flag_count")
 		#sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
 			MF = MemoryFlood[k]
-			print("check_suspect() k: {}, MF: {}".format( k, MF ))
+			#print("check_suspect() k: {}, MF: {}".format( k, MF ))
 # {'fto': '177.37', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 88, 'ftt': {
 #    'cd176a0b': {'ftt': '177.37.46', 'cdts': 1770422400, 'last_ts': 40120.901163, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 119}, 
 #    '23190b27': {'ftt': '177.37.44', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39189.540114, 'last_flag': '[S]', 'flag_count': 110}, 
@@ -195,6 +198,7 @@ def check_suspect():
 				print("Block dont exists! {} - {}".format( k, MF['fto'] ))
 			#
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
+				print("check_suspect() k: {}, MF: {}".format( k, MF ))
 				perform_block( MF )
 				print("---------------------------------------------")
 		Globals['run'] = False
@@ -219,7 +223,7 @@ def parse( line:str ):
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
 	CDTS = cdts()
-	print("parse() fto({}): {}, ftt({}): {}".format(cfto,fto,cftt,ftt))
+	#print("parse() fto({}): {}, ftt({}): {}".format(cfto,fto,cftt,ftt))
 	#
 	if cfto not in MemoryFlood:
 		#
