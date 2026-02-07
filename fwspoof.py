@@ -30,19 +30,20 @@ Version = "0.1.0"
 #
 def HELP():
 	global Options
-	print("HELP....\n")
+	out("HELP....\n")
 	for k in Options:
 		o=Options[k]
-		print("{} => {}".format( o['short'], o['name'] ))
+		out("{} => {}".format( o['short'], o['name'] ))
 #
 def VERSION():
 	global Version
-	print("v{}".format(Version))
+	out("v{}".format(Version))
 
 #--
 #
 Config = {
 	"file_block":"blocks.out",
+	"verbose"   :True,
 }
 #
 Options = {
@@ -98,68 +99,111 @@ MemoryBlock = {
 	#}
 	#"fto":{}
 }
+#
+Stats = {}
+
+#--
+#
+def out(text:str,opts:list={}):
+	global Config
+	opt_prefix  = (opts['prefix'] if 'prefix' in opts else None)
+	opt_verbose = (opts['verbose'] if 'verbose' in opts else Config['verbose'])
+	if opt_verbose==False:
+		return False
+	if opt_prefix!=None:
+		print("{} => {}".format(opt_prefix,text))
+	else:
+		print(text)
+	return True
+
+#
+def cleanup():
+	global Options,Stats,g_option
+	out("cleanup() START",{'verbose':True})
+	#
+	out("Stats: ")
+	out(Stats)
+	return True
+#
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        # Let KeyboardInterrupt propagate
+        out("Exception: Keyboard Interrupt: {}".format(exc_type),{'verbose':True})
+        return
+    # Extract traceback info
+    tb = traceback.extract_tb(exc_traceback)
+    # Get the last frame (most recent error)
+    frame = tb[-1]
+    filename, line, func, text = frame
+    out(f"Exception: {exc_type.__name__}: {exc_value} (line {line} in {filename})",{'verbose':True,})
+    # Optionally print full traceback
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+#
+atexit.register(cleanup)
+sys.excepthook = handle_exception
 
 #
 def load_blocks():
 	global MemoryBlock
+	out("load_blocks() START")
 	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
 	for line in output.split('\n'):
 		# DROP       all  --  45.187.56.0/22       0.0.0.0/0
 		if rmatch(line,"^DROP.*"):
 			a = pmatch(line,r"\d+\.\d+\.\d+\.\d+(?:/\d+)?")
 			# ['45.187.56.0/22', '0.0.0.0/0']
-			print("debug len: {}, data: {}".format( len(a), a ))
+			out("load_blocks() debug len: {}, data: {}".format( len(a), a ))
 			# match cidr only. Ex.: ip/22 or ip/24 or ip/whatever because preventing spoofed attacks.
 			if len(a)>0 and rmatch(a[0],".*\\/\\d++$"):
 				# debug len: 2, data: ['37.60.250.29', '0.0.0.0/0']
 				# debug len: 2, data: ['45.156.129.52', '0.0.0.0/0']
 				# debug len: 2, data: ['45.187.56.0/22', '0.0.0.0/0']
 				# perform_list_block:  ['45.187.56.0/22', '0.0.0.0/0']
-				print("perform_list_block: ",a)
 				fto = ".".join(a[0].split(".")[:2])
 				ftt = ".".join(a[0].split(".")[:3])
 				#
 				cfto = crc32b(fto)
 				cftt = crc32b(ftt)
-				print("load_block_list() fto({}): {}, ftt({}): {}".format( cfto, fto, cftt, ftt ))
+				out("load_blocks() fto({}): {}, ftt({}): {}".format( cfto, fto, cftt, ftt ))
 				# Save to MemoryBlock
 				if cfto not in MemoryBlock:
 					MemoryBlock[cfto] = {}
 				if cftt not in MemoryBlock[cfto]:
 					MemoryBlock[cfto][cftt] = {"ftt":ftt,"cidr":a[0],}
-	print("load_block_list() END len {}".format( len(MemoryBlock) ))
-	print(MemoryBlock)
+	out("load_blocks() END len {}".format( len(MemoryBlock) ))
+	out(MemoryBlock)
 #
 def check_blocks():
 	global MemoryBlock, MemoryFlood
-	print("check_blocks() START")
+	out("check_blocks() START")
 	for k in MemoryBlock:
-		#print("check_blocks() k {} = {}".format( k, MemoryBlock[k] ))
+		#out("check_blocks() k {} = {}".format( k, MemoryBlock[k] ))
 		if k not in CheckBlock:
-			print("Unblocking {}".format( MemoryBlock[k] ))
+			out("Unblocking {}".format( MemoryBlock[k] ))
 		else:
-			print("Leaving blocked {}".format( MemoryBlock[k] ))
+			out("Leaving blocked {}".format( MemoryBlock[k] ))
 #
 def block_ip_range(cidr):
-	print("block_ip_range() START, cidr: {}".format( cidr ))
+	out("block_ip_range() START, cidr: {}".format( cidr ))
 	# Block the IP range using iptables
 	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
 #
 def unblock_ip_range(cidr):
-	print("unblock_ip_range() START, cidr: {}".format( cidr ))
+	out("unblock_ip_range() START, cidr: {}".format( cidr ))
 	# Unblock the IP range using iptables
 	os.system(f'iptables -D FORWARD -s {cidr}')
 #
 def perform_block( MF ):
 	global MemoryBlock
-	#print("perform_block() START MF: ",MF)
+	#out("perform_block() START MF: ",MF)
 	#
 	cfto = crc32b(MF['fto']) # cfto is crc32b of first two octet of ip
 	#
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
 		if MFF['flag_count'] >= 5:
-			print("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
+			out("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
 			cidr = "{}.0/24".format( MFF['ftt'] )
 			cftt = k # cftt is crc32b of first three octet of ip
 			# Save to MemoryBlock
@@ -172,10 +216,10 @@ def perform_block( MF ):
 def exists_block( K, MF ):
 	global MemoryBlock
 	if K not in MemoryBlock:
-		#print("exists_block() K: {} not in MemoryBlock!".format( K ))
+		#out("exists_block() K: {} not in MemoryBlock!".format( K ))
 		return False
 	for k in MF['ftt']:
-		#print("exists_block() checking k: {} vs {}".format( k, MemoryBlock[K] ))
+		#out("exists_block() checking k: {} vs {}".format( k, MemoryBlock[K] ))
 		if k in MemoryBlock[K]:
 			return True
 	return False
@@ -185,7 +229,7 @@ def exists_block( K, MF ):
 def check_suspect():
 	global MemoryFlood, MemoryBlock
 	#
-	print("check_suspect() START, all: {}".format( len(MemoryFlood) ))
+	out("check_suspect() START, all: {}".format( len(MemoryFlood) ))
 	if len(MemoryFlood)<=0:
 		return False
 	#
@@ -194,7 +238,7 @@ def check_suspect():
 		#for k in reversed(MemoryFlood):
 		for k in MemoryFlood:
 			MF = MemoryFlood[k]
-			#print("check_suspect() k: {}, MF: {}".format( k, MF ))
+			#out("check_suspect() k: {}, MF: {}".format( k, MF ))
 # {'fto': '177.37', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 88, 'ftt': {
 #    'cd176a0b': {'ftt': '177.37.46', 'cdts': 1770422400, 'last_ts': 40120.901163, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 119}, 
 #    '23190b27': {'ftt': '177.37.44', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39189.540114, 'last_flag': '[S]', 'flag_count': 110}, 
@@ -202,20 +246,20 @@ def check_suspect():
 #    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
 			#
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
-				print("check_suspect() k: {}, MF: {}".format( k, MF ))
+				out("check_suspect() k: {}, MF: {}".format( k, MF ))
 				#
 				if exists_block(k,MF):
-					#print("Already blocked! {} - {}".format( k, MF['fto'] ))
-					print("check_suspect() Adding to CheckBlock D1 k: {}".format(MF['k']))
+					#out("Already blocked! {} - {}".format( k, MF['fto'] ))
+					out("check_suspect() Adding to CheckBlock D1 k: {}".format(MF['k']))
 					CheckBlock[k]=True
 					continue
 				else:
-					print("Block dont exists! {} - {}".format( k, MF['fto'] ))
+					out("Block dont exists! {} - {}".format( k, MF['fto'] ))
 				#
 				if perform_block( MF ):
-					print("check_suspect() Adding to CheckBlock D2 k: {}".format(MF['k']))
+					out("check_suspect() Adding to CheckBlock D2 k: {}".format(MF['k']))
 					CheckBlock[MF['k']]=True
-				print("---------------------------------------------")
+				out("---------------------------------------------")
 		Globals['run'] = False
 	return True
 
@@ -301,7 +345,7 @@ def load_pcap():
 		parse( line )
 	#
 	if check_suspect()==False:
-		print("load_pcap() Failed. MemoryFood file.pcap empty!")
+		out("load_pcap() Failed. MemoryFood file.pcap empty!")
 		return False
 	#
 	check_blocks()
@@ -346,7 +390,6 @@ def main(argv):
 	#
 	#if opt_help:
 	if Options[crc32b('-h')]['value']:
-		print("HElp!")
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
 	#
