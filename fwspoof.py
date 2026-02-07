@@ -154,6 +154,8 @@ def unblock_ip_range(cidr):
 def perform_block( MF ):
 	print("perform_block() START MF: ",MF)
 	#
+	cfto = crc32b(MF['fto'])
+	#
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
 		if MFF['flag_count'] >= 5:
@@ -172,6 +174,8 @@ def perform_block( MF ):
 						}
 					}
 				}
+			else:
+				print("cfto exists in MemoryBlock!")
 			block_ip_range( cidr )
 		else:
 			print("perform_block() SKIP ftt {} => {}".format( k, MF['ftt'][k] ))
