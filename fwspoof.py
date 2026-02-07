@@ -170,7 +170,8 @@ def worker():
 			print("---------------------------------------------")
 		
 		print("Sleeping 3/s")
-		time.sleep(3)
+		Globals['run'] = False
+		#time.sleep(3)
 
 #
 def run():
