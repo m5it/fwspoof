@@ -186,6 +186,8 @@ def check_suspect():
 	global MemoryFlood, MemoryBlock
 	#
 	print("check_suspect() START, all: {}".format( len(MemoryFlood) ))
+	if len(MemoryFlood)<=0:
+		return False
 	#
 	while Globals['run']:
 		#
@@ -215,6 +217,7 @@ def check_suspect():
 					CheckBlock[MF['k']]=True
 				print("---------------------------------------------")
 		Globals['run'] = False
+	return True
 
 #
 def parse( line:str ):
@@ -297,11 +300,25 @@ def load_pcap():
 	for line in sys.stdin:
 		parse( line )
 	#
-	check_suspect()
+	if check_suspect()==False:
+		print("load_pcap() Failed. MemoryFood file.pcap empty!")
+		return False
 	#
 	check_blocks()
 	Globals['run'] = False
-
+	return True
+#
+def start():
+	#
+	load_blocks()
+	#
+	# Create a new thread that runs the my_function
+	#thread = threading.Thread(target=check)
+	#thread.start()
+	#
+	load_pcap()
+	#
+	#thread.join()
 #
 def main(argv):
 	global Options, MemoryFlood
@@ -333,15 +350,7 @@ def main(argv):
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
 	#
-	load_blocks()
-	#
-	# Create a new thread that runs the my_function
-	#thread = threading.Thread(target=check)
-	#thread.start()
-	#
-	load_pcap()
-	#
-	#thread.join()
+	start()
 
 #--
 if __name__ == '__main__':
