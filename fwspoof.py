@@ -122,6 +122,7 @@ def load_blocks():
 				# Save to MemoryBlock
 				MemoryBlock[cfto] = {cftt:{"ftt":ftt,}}
 	print("load_block_list() END len {}".format( len(MemoryBlock) ))
+	print(MemoryBlock)
 #
 def check_blocks():
 	print("check_blocks() START")
@@ -155,8 +156,10 @@ def perform_block( MF ):
 def exists_block( K, MF ):
 	global MemoryBlock
 	if K not in MemoryBlock:
+		print("exists_block() K: {} not in MemoryBlock!".format( K ))
 		return False
 	for k in MF['ftt']:
+		print("exists_block() checking k: {} vs {}".format( k, MemoryBlock[K] ))
 		if k in MemoryBlock[K]:
 			return True
 	return False
@@ -179,10 +182,10 @@ def check_suspect():
 #    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
 			#
 			if exists_block(k,MF):
-				print("Already blocked!")
+				print("Already blocked!",k)
 				continue
 			else:
-				print("Block dont exists!")
+				print("Block dont exists!",k)
 			#
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
 				perform_block( MF )
