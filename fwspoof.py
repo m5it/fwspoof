@@ -19,7 +19,10 @@
 #  or
 #        tcpdump -i enp1s0 -nn -s0 tcp and dst 10.0.5.10 and (not port 22) -w out.cap -G 1800
 #
-#  2.)   tcpdump -r out.cap -nn -s0 | python fwspoof.py
+#  2.)   tcpdump -r out.cap -nn -s0 | python fwspoof.py -V
+#  3.)   python fwspoof.py -h
+#        python fwspoof.py -v
+#        python fwspoof.py -V # verbose | debug output
 #--
 import atexit
 import traceback
@@ -159,8 +162,8 @@ def cleanup():
 	global Options,Stats
 	out("cleanup() START",{'verbose':True})
 	#
-	out("Stats: ")
-	out(Stats)
+	print("Stats: ")
+	print(Stats)
 	return True
 #
 def handle_exception(exc_type, exc_value, exc_traceback):
