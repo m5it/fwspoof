@@ -79,3 +79,44 @@ def pmatch(input,regex):
 		for v in a:
 			ret.append( v )
 	return ret
+
+#-- FILE
+#
+def file_exists( filename:str ) -> bool:
+	return os.path.exists( filename )
+#
+def file_write( filename, data, overwrite=False ):
+	f=None
+	try:
+		if file_exists(filename) and overwrite==True:
+			f = open(filename,"w")
+			f.seek(0)
+			f.truncate()
+		elif file_exists(filename)==False:
+			f = open(filename,"w")
+		else:
+			f = open(filename,"a")
+		f.write("{}".format( data ))
+		f.close()
+	except Exception as E:
+		print("ERROR: file_write() on file: {}, len: {}, E: {}".format( filename, len(data), E ))
+#
+def file_overline( filename, xobj, at, isString=False ):
+	#--
+	#
+	if os.path.exists( filename )==False:
+		return False;
+	
+	lines=[]
+	with open(filename,'r') as f:
+		lines = f.readlines()
+	#
+	with open(filename,'w') as f:
+		for i,line in enumerate(lines,0):
+			if i==at:
+				if isString==False:
+					f.writelines( "{}\n".format( json.dumps(xobj) ) )
+				else:
+					f.writelines( "{}\n".format( line.strip() ) )
+			else:
+				f.writelines( "{}\n".format( line.strip() ) )
