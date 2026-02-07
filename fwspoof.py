@@ -342,6 +342,8 @@ def parse( line:str ):
 	dip = ".".join(a[4].split(".")[:4]) # source ip
 	out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	Stats["all"]+=1
+	# Check if sip between allowed, lets skip it so we wont block our selfs... :*
+	
 	#
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
