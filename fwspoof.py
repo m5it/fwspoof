@@ -103,6 +103,7 @@ MemoryBlock = {
 Stats = {
 	"all":0,
 	"blocking":0,
+	"unblocking":0,
 	"blocked":0,
 }
 
@@ -179,12 +180,13 @@ def load_blocks():
 	out(MemoryBlock)
 #
 def check_blocks():
-	global MemoryBlock, MemoryFlood
+	global MemoryBlock, CheckBlock, Stats
 	out("check_blocks() START")
 	for k in MemoryBlock:
 		#out("check_blocks() k {} = {}".format( k, MemoryBlock[k] ))
 		if k not in CheckBlock:
 			out("Unblocking {}".format( MemoryBlock[k] ))
+			Stats['unblocking']+=1
 		else:
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
 #
