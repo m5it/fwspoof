@@ -61,6 +61,10 @@ Options = {
 		'exec':VERSION,
 	},
 }
+#
+Globals = {
+	"run":False,
+}
 #-- Save all data and count. If they reach block value then we block them. (simple).
 #   After X time not active we unblock them! (simple).
 # hard to understand! :x
@@ -150,12 +154,13 @@ def unblock_ip_range(cidr):
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
 def worker():
+	global Globals
 	print("worker() START")
 	#
 	#mem = sorted(MemoryFlood.items(), key=lambda item:list(item[1].keys())[0])
 	print("worker() len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
 	#
-	while True:
+	while Globals['run']:
 		#sortDict(MemoryFlood,"flag_count")
 		sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
@@ -169,7 +174,9 @@ def worker():
 
 #
 def run():
-	global MemoryFlood, Options
+	global MemoryFlood, Options, Globals
+	#
+	Globals['run'] = True
 	#
 	for line in sys.stdin:
 		# line Ex.: run() line 14:50:53.440085 IP 138.121.247.153.35544 > 192.168.0.69.443: Flags [S], seq 3300412588, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
@@ -236,6 +243,9 @@ def run():
 				}
 			#
 			MemoryFlood[cfto]["ftt"] = oftt
+	#
+	Globals['run'] = False
+	worker()
 
 #
 def main(argv):
@@ -271,12 +281,12 @@ def main(argv):
 	load_block_list()
 	#
 	# Create a new thread that runs the my_function
-	thread = threading.Thread(target=worker)
-	thread.start()
+	#thread = threading.Thread(target=worker)
+	#thread.start()
 	#
 	run()
 	#
-	thread.join()
+	#thread.join()
 
 #--
 if __name__ == '__main__':
