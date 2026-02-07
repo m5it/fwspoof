@@ -164,10 +164,12 @@ def check():
 		#sortDict(MemoryFlood,"flag_count")
 		sortDict(MemoryFlood,"last_ts")
 		for k in reversed(MemoryFlood):
-			print("worker() fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
-			for k1 in MemoryFlood[k]['ftt']:
-				print("worker() ftt {} => {}".format( k1, MemoryFlood[k]['ftt'][k1] ))
-			print("---------------------------------------------")
+			MF = MemoryFlood[k]
+			if MF['flag_count'] >= 13:
+				print("worker() BLOCKing: fto {} {} - {} => {}".format( k, todt(MemoryFlood[k]['last_ts']+cdts()), cts(), MemoryFlood[k] ))
+				for k1 in MemoryFlood[k]['ftt']:
+					print("worker() ftt {} => {}".format( k1, MemoryFlood[k]['ftt'][k1] ))
+				print("---------------------------------------------")
 		
 		print("Sleeping 3/s")
 		Globals['run'] = False
