@@ -234,13 +234,13 @@ def check_blocks():
 			Stats['unblocking']+=1
 			for k1 in MemoryBlock[k]:
 				o = MemoryBlock[k][k1]
-				print("unblocking {}".format( o['cidr'] ))
+				out("unblocking {}".format( o['cidr'] ))
 		else:
 			# Leaving blocked {'1a17d3cc': {'ftt': '201.49.136', 'cidr': '201.49.136.0/24'}, '8aa8ce5d': {'ftt': '201.49.139', 'cidr': '201.49.139.0/24'}, 'fdaffecb': {'ftt': '201.49.138', 'cidr': '201.49.138.0/24'}, '6d10e35a': {'ftt': '201.49.137', 'cidr': '201.49.137.0/24'}}
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
-			for k1 in MemoryBlock[k]:
-				o = MemoryBlock[k][k1]
-				print("test unblocking {}".format( o['cidr'] ))
+			#for k1 in MemoryBlock[k]:
+			#	o = MemoryBlock[k][k1]
+			#	print("test unblocking {}".format( o['cidr'] ))
 #
 def block_ip_range(cidr):
 	out("block_ip_range() START, cidr: {}".format( cidr ))
@@ -250,7 +250,7 @@ def block_ip_range(cidr):
 def unblock_ip_range(cidr):
 	out("unblock_ip_range() START, cidr: {}".format( cidr ))
 	# Unblock the IP range using iptables
-	os.system(f'iptables -D FORWARD -s {cidr}')
+	os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
 #
 def perform_block( MF ):
 	global MemoryBlock
