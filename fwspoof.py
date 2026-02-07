@@ -52,7 +52,6 @@ def VERSION():
 #
 Config = {
 	"file_block":"blocks.out",
-	"verbose"   :True,
 }
 #
 Options = {
@@ -86,6 +85,14 @@ Options = {
 		'long':'--max_flag_count_per_cidr',
 		'accept':True, # accept value
 		'value':5,
+		#'exec':VERSION,
+	},
+	crc32b('-V'):{
+		'name':'verbose',
+		'short':'-V',
+		'long':'--verbose',
+		'accept':False, # accept value
+		'value':False,
 		#'exec':VERSION,
 	},
 }
@@ -135,9 +142,9 @@ Stats = {
 #--
 #
 def out(text:str,opts:list={}):
-	global Config
+	global Options
 	opt_prefix  = (opts['prefix'] if 'prefix' in opts else None)
-	opt_verbose = (opts['verbose'] if 'verbose' in opts else Config['verbose'])
+	opt_verbose = (opts['verbose'] if 'verbose' in opts else Options[crc32b('-V')]['value'])
 	if opt_verbose==False:
 		return False
 	if opt_prefix!=None:
