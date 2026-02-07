@@ -1,4 +1,5 @@
 #-- (5.2.2026) - by t3ch aka B.K. => w4d4f4k at gmail dot com
+# v0.1 - 7.2.2026
 #--------------------------------------------------------------
 # FWSpoof.py - Working on cleaning of trash. Working on making trash useful. So you are welcome until you can! *** Kisses my bad friends.
 #--
@@ -6,11 +7,19 @@
 # Trying to focus only on this kind of attack. For other trash have other scripts like FWTrash
 #
 # At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.
+#--
+# v0.1
 #
-# Usage:
-#     tcpdump -r out.cap -nn -s0 | python fwspoof.py
-# or
-#     tcpdump -i eno1 -nn -s0 | python fwspoof.py
+# First we save received packets with tcpdump, like this we can filter out what is not necessary to read.
+# Second we read saved packets and pass trough pipe to fwspoof to analyze data.
+# fwspoof decide depend on configuration or block or unblock suspects.
+#
+# Usage (10.0.5.10) is server that is getting attacked:
+#  1.)   tcpdump -i enp1s0 -nn -s0 tcp and dst 10.0.5.10 and (not port 22) -w out.cap -G 1800 --print
+#  or
+#        tcpdump -i enp1s0 -nn -s0 tcp and dst 10.0.5.10 and (not port 22) -w out.cap -G 1800
+#
+#  2.)   tcpdump -r out.cap -nn -s0 | python fwspoof.py
 #--
 import atexit
 import traceback
@@ -137,6 +146,7 @@ def out(text:str,opts:list={}):
 		print(text)
 	return True
 
+#--
 #
 def cleanup():
 	global Options,Stats
@@ -159,11 +169,11 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     out(f"Exception: {exc_type.__name__}: {exc_value} (line {line} in {filename})",{'verbose':True,})
     # Optionally print full traceback
     traceback.print_exception(exc_type, exc_value, exc_traceback)
-
 #
 atexit.register(cleanup)
 sys.excepthook = handle_exception
 
+#--
 #
 def load_blocks():
 	global MemoryBlock
@@ -245,7 +255,6 @@ def exists_block( K, MF ):
 		if k in MemoryBlock[K]:
 			return True
 	return False
-
 # check for problems on count of bad things or time on these items..
 # check() can block or unblock bad trash.
 def check_suspect():
@@ -290,7 +299,6 @@ def check_suspect():
 				out("check_suspect() OK {}".format( MF ))
 		Globals['run'] = False
 	return True
-
 #
 def parse( line:str ):
 	#run() line 12:05:54.906213 IP 177.37.46.55.19974 > 192.168.0.69.443: Flags [S], seq 1823246134, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
@@ -361,8 +369,6 @@ def parse( line:str ):
 			}
 		#
 		MemoryFlood[cfto]["ftt"] = oftt
-
-
 #
 def load_pcap():
 	global MemoryFlood, Options, Globals
