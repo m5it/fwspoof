@@ -63,6 +63,22 @@ Options = {
 		'value':False,
 		'exec':VERSION,
 	},
+	crc32b('-M'):{
+		'name':'max_flag_count',
+		'short':'-M',
+		'long':'--max_flag_count',
+		'accept':True, # accept value
+		'value':20,
+		#'exec':VERSION,
+	},
+	crc32b('-m'):{
+		'name':'max_flag_count_per_cidr',
+		'short':'-m',
+		'long':'--max_flag_count_per_cidr',
+		'accept':True, # accept value
+		'value':5,
+		#'exec':VERSION,
+	},
 }
 #
 Globals = {
@@ -208,7 +224,7 @@ def perform_block( MF ):
 	#
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
-		if MFF['flag_count'] >= 5:
+		if MFF['flag_count'] >= Options[crc32b('-m')]['value']:
 			out("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
 			cidr = "{}.0/24".format( MFF['ftt'] )
 			cftt = k # cftt is crc32b of first three octet of ip
@@ -252,7 +268,7 @@ def check_suspect():
 #    'ba105a9d': {'ftt': '177.37.47', 'cdts': 1770422400, 'last_ts': 40115.190599, 'first_ts': 39191.390454, 'last_flag': '[S]', 'flag_count': 19}, 
 #    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
 			#
-			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
+			if MF['last_flag']=='[S]' and MF['flag_count'] >= Options[crc32b('-M')]['value']:
 				out("check_suspect() WARNING k: {}, MF: {}".format( k, MF ))
 				#
 				if exists_block(k,MF):
