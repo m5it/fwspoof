@@ -160,9 +160,9 @@ def out(text:str,opts:list={}):
 #
 def cleanup():
 	global Options,Stats
-	out("cleanup() START",{'verbose':True})
+	out("cleanup() START")
 	#
-	print("Stats: ")
+	out("Stats: ")
 	print(Stats)
 	return True
 #
