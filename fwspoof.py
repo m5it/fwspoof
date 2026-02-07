@@ -380,31 +380,31 @@ def parse( line:str ):
 			MemoryFlood[cfto]["last_ts"]    = tots(a[0])
 			MemoryFlood[cfto]["flag_count"] = 1
 			MemoryFlood[cfto]["last_flag"] = a[6][:-1]
-		# # # Check third octet
-		oftt = MemoryFlood[cfto]["ftt"]
-		if cftt in oftt:
-			# cftt exists
-			if oftt[cftt]["last_flag"] == a[6][:-1]:
-				# same flag, increase count
-				oftt[cftt]["last_ts"]    = tots(a[0])
-				oftt[cftt]["flag_count"] += 1
-			else:
-				# flag change, zerro count
-				oftt[cftt]["last_ts"]    = tots(a[0])
-				oftt[cftt]["flag_count"] = 1
+	# # # Check third octet
+	oftt = MemoryFlood[cfto]["ftt"]
+	if cftt in oftt:
+		# cftt exists
+		if oftt[cftt]["last_flag"] == a[6][:-1]:
+			# same flag, increase count
+			oftt[cftt]["last_ts"]    = tots(a[0])
+			oftt[cftt]["flag_count"] += 1
 		else:
-			# cftt dont exists
-			oftt[cftt] = {
-				"ftt":ftt,
-				"k"  :cftt,
-				"cdts"    :CDTS,
-				"last_ts" :tots(a[0]),
-				"first_ts":tots(a[0]),
-				"last_flag":a[6][:-1],
-				"flag_count":1,
-			}
-		#
-		MemoryFlood[cfto]["ftt"] = oftt
+			# flag change, zerro count
+			oftt[cftt]["last_ts"]    = tots(a[0])
+			oftt[cftt]["flag_count"] = 1
+	else:
+		# cftt dont exists
+		oftt[cftt] = {
+			"ftt":ftt,
+			"k"  :cftt,
+			"cdts"    :CDTS,
+			"last_ts" :tots(a[0]),
+			"first_ts":tots(a[0]),
+			"last_flag":a[6][:-1],
+			"flag_count":1,
+		}
+	#
+	MemoryFlood[cfto]["ftt"] = oftt
 #
 def load_pcap():
 	global MemoryFlood, Options, Globals
