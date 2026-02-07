@@ -152,12 +152,37 @@ def unblock_ip_range(cidr):
 	os.system(f'iptables -D FORWARD -s {cidr}')
 #
 def perform_block( MF ):
+	print("perform_block() START MF: ",MF)
+	#
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
 		if MFF['flag_count'] >= 5:
 			print("perform_block() BLOCK ftt {} => {}".format( k, MF['ftt'][k] ))
+			cidr = "{}.0/24".format( MFF['ftt'] )
+			#
+			if cfto not in MemoryBlock:
+				MemoryBlock[cfto] = {
+					"fto":fto,
+					"last_block":ts,
+					"cidr":a[0],
+					"ftt":{
+						cftt:{
+							"ftt":ftt,
+							"last_block":ts,
+						}
+					}
+				}
+			block_ip_range( cidr )
 		else:
 			print("perform_block() SKIP ftt {} => {}".format( k, MF['ftt'][k] ))
+	#
+	save_block()
+#
+def save_block():
+	print("save_block() START")
+#
+def load_blocks():
+	print("load_blocks() START")
 
 # worker check for problems on count of bad things or time on these items..
 # worker can block or unblock bad trash.
