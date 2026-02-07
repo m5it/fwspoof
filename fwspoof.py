@@ -134,7 +134,7 @@ def check_blocks():
 def block_ip_range(cidr):
 	print("block_ip_range() START, cidr: {}".format(cidr))
 	# Block the IP range using iptables
-	#os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
+	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
 #
 def unblock_ip_range(cidr):
 	# Unblock the IP range using iptables
