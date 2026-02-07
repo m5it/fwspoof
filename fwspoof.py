@@ -167,8 +167,10 @@ def exists_block( K, MF ):
 # check for problems on count of bad things or time on these items..
 # check() can block or unblock bad trash.
 def check_suspect():
-	global Globals
-	print("check() START len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
+	global MemoryFlood, MemoryBlock
+	print("check_suspect() START len MemoryFlood( {} ): ".format( len(MemoryFlood) ))
+	print("check_suspect() DEBUG MemoryBlock: ")
+	print(MemoryBlock)
 	#
 	while Globals['run']:
 		#sortDict(MemoryFlood,"flag_count")
@@ -182,10 +184,10 @@ def check_suspect():
 #    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
 			#
 			if exists_block(k,MF):
-				print("Already blocked!",k)
+				print("Already blocked! {} - {}".format( k, MF['fto'] ))
 				continue
 			else:
-				print("Block dont exists!",k)
+				print("Block dont exists! {} - {}".format( k, MF['fto'] ))
 			#
 			if MF['last_flag']=='[S]' and MF['flag_count'] >= 20:
 				perform_block( MF )
