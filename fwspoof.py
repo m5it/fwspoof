@@ -230,7 +230,6 @@ def check_blocks():
 	global MemoryBlock, CheckBlock, Stats
 	out("check_blocks() START")
 	for k in MemoryBlock:
-		#out("check_blocks() k {} = {}".format( k, MemoryBlock[k] ))
 		if k not in CheckBlock:
 			out("Unblocking {}".format( MemoryBlock[k] ))
 			Stats['unblocking']+=1
@@ -239,11 +238,7 @@ def check_blocks():
 				out("unblocking {}".format( o['cidr'] ))
 				unblock_ip_range( o['cidr'] )
 		else:
-			# Leaving blocked {'1a17d3cc': {'ftt': '201.49.136', 'cidr': '201.49.136.0/24'}, '8aa8ce5d': {'ftt': '201.49.139', 'cidr': '201.49.139.0/24'}, 'fdaffecb': {'ftt': '201.49.138', 'cidr': '201.49.138.0/24'}, '6d10e35a': {'ftt': '201.49.137', 'cidr': '201.49.137.0/24'}}
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
-			#for k1 in MemoryBlock[k]:
-			#	o = MemoryBlock[k][k1]
-			#	print("test unblocking {}".format( o['cidr'] ))
 #
 def block_ip_range(cidr):
 	out("block_ip_range() START, cidr: {}".format( cidr ))
@@ -266,12 +261,9 @@ def perform_block( MF ):
 		MFF = MF['ftt'][k]
 		# skip if already blocked. we get to here if one range start flooding later.
 		if MF['k'] not in MemoryBlock:
-			print("perform_block() D1")
 			continue
 		if k in MemoryBlock[MF['k']]:
-			print("perform_block() D2")
 			continue
-		print("perform_block() MFF: {}, -m: {}".format(MFF,Options[crc32b('-m')]['value']))
 		
 		if MFF['flag_count'] >= Options[crc32b('-m')]['value']:
 			out("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
@@ -286,14 +278,10 @@ def exists_block( K, MF ):
 	global MemoryBlock
 	allin=0
 	if K not in MemoryBlock:
-		#out("exists_block() K: {} not in MemoryBlock!".format( K ))
 		return False
 	for k in MF['ftt']:
-		#out("exists_block() checking k: {} vs {}".format( k, MemoryBlock[K] ))
 		if k in MemoryBlock[K]:
-			#return True
 			allin+=1
-	print("exists_block() END allin: {} == {}".format( allin, len(MF['ftt']) ))
 	return True if allin==len(MF['ftt']) else False
 # check for problems on count of bad things or time on these items..
 # check() can block or unblock bad trash.
