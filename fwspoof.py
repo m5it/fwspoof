@@ -248,12 +248,12 @@ def check_blocks():
 def block_ip_range(cidr):
 	out("block_ip_range() START, cidr: {}".format( cidr ))
 	# Block the IP range using iptables
-	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
+	#os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
 #
 def unblock_ip_range(cidr):
 	out("unblock_ip_range() START, cidr: {}".format( cidr ))
 	# Unblock the IP range using iptables
-	os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
+	#os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
 #
 def perform_block( MF ):
 	global MemoryBlock
@@ -263,6 +263,9 @@ def perform_block( MF ):
 	#
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
+		
+		print("perform_block() MFF: {}, -m: {}".format(MFF,Options[crc32b('-m')]['value']))
+		
 		if MFF['flag_count'] >= Options[crc32b('-m')]['value']:
 			out("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
 			cidr = "{}.0/24".format( MFF['ftt'] )
