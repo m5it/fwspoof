@@ -260,9 +260,9 @@ def perform_block( MF ):
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
 		# skip if already blocked. we get to here if one range start flooding later.
-		if MF['k'] not in MemoryBlock:
-			continue
-		if k in MemoryBlock[MF['k']]:
+		#if MF['k'] not in MemoryBlock:
+		#	continue
+		if MF['k'] in MemoryBlock and k in MemoryBlock[MF['k']]:
 			continue
 		
 		if MFF['flag_count'] >= Options[crc32b('-m')]['value']:
