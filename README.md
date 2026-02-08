@@ -1,5 +1,6 @@
 #-- (5.2.2026) - by t3ch aka B.K. => w4d4f4k at gmail dot com
 # v0.1 - 7.2.2026
+#        8.2.2026 - first bugs. It block just one range instead of four. Quick fix is here.
 #--------------------------------------------------------------
 # FWSpoof.py - Working on cleaning of trash. Working on making trash useful. So you are welcome until you can! *** Kisses my bad friends.
 #--
