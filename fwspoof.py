@@ -278,14 +278,17 @@ def perform_block( MF ):
 #
 def exists_block( K, MF ):
 	global MemoryBlock
+	allin=0
 	if K not in MemoryBlock:
 		#out("exists_block() K: {} not in MemoryBlock!".format( K ))
 		return False
 	for k in MF['ftt']:
 		#out("exists_block() checking k: {} vs {}".format( k, MemoryBlock[K] ))
 		if k in MemoryBlock[K]:
-			return True
-	return False
+			#return True
+			allin+=1
+	print("exists_block() END allin: {} == {}".format( allin, len(MF['ftt']) ))
+	return True if allin==len(MF['ftt']) else False
 # check for problems on count of bad things or time on these items..
 # check() can block or unblock bad trash.
 def check_suspect():
