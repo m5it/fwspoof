@@ -248,18 +248,19 @@ def check_blocks():
 def block_ip_range(cidr):
 	out("block_ip_range() START, cidr: {}".format( cidr ))
 	# Block the IP range using iptables
-	#os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
+	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
 #
 def unblock_ip_range(cidr):
 	out("unblock_ip_range() START, cidr: {}".format( cidr ))
 	# Unblock the IP range using iptables
-	#os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
+	os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
 #
 def perform_block( MF ):
 	global MemoryBlock
 	#out("perform_block() START MF: ",MF)
 	#
 	cfto = crc32b(MF['fto']) # cfto is crc32b of first two octet of ip
+	blocked=False
 	#
 	for k in MF['ftt']:
 		MFF = MF['ftt'][k]
@@ -270,12 +271,10 @@ def perform_block( MF ):
 			out("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
 			cidr = "{}.0/24".format( MFF['ftt'] )
 			cftt = k # cftt is crc32b of first three octet of ip
-			# Save to MemoryBlock
-			MemoryBlock[cfto] = {cftt:{"ftt":MFF['ftt'],}}
 			# Block cidr
 			block_ip_range( cidr )
-			return True
-	return False
+			blocked=True
+	return blocked
 #
 def exists_block( K, MF ):
 	global MemoryBlock
