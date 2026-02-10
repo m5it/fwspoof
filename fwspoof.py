@@ -298,12 +298,6 @@ def check_suspect():
 		#for k in reversed(MemoryFlood):
 		for k in MemoryFlood:
 			MF = MemoryFlood[k]
-			#out("check_suspect() k: {}, MF: {}".format( k, MF ))
-# {'fto': '177.37', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 88, 'ftt': {
-#    'cd176a0b': {'ftt': '177.37.46', 'cdts': 1770422400, 'last_ts': 40120.901163, 'first_ts': 39185.956021, 'last_flag': '[S]', 'flag_count': 119}, 
-#    '23190b27': {'ftt': '177.37.44', 'cdts': 1770422400, 'last_ts': 40121.319088, 'first_ts': 39189.540114, 'last_flag': '[S]', 'flag_count': 110}, 
-#    'ba105a9d': {'ftt': '177.37.47', 'cdts': 1770422400, 'last_ts': 40115.190599, 'first_ts': 39191.390454, 'last_flag': '[S]', 'flag_count': 19}, 
-#    '541e3bb1': {'ftt': '177.37.45', 'cdts': 1770422400, 'last_ts': 40114.516531, 'first_ts': 39194.211224, 'last_flag': '[S]', 'flag_count': 111}}}
 			#
 			#if MF['last_flag']=='[S]' and MF['flag_count'] >= Options[crc32b('-M')]['value']:
 			if MF['last_flag']==Options[crc32b('-F')]['value'] and MF['flag_count'] >= Options[crc32b('-M')]['value']:
@@ -339,6 +333,8 @@ def parse( line:str ):
 	ftt = ".".join(a[2].split(".")[:3]) # First three octets of IP
 	#
 	sip = ".".join(a[2].split(".")[:4]) # source ip
+	csip = crc32b(sip)
+	
 	dip = ".".join(a[4].split(".")[:4]) # source ip
 	#out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	Stats["all"]+=1
@@ -368,6 +364,7 @@ def parse( line:str ):
 					"first_ts":tots(a[0]),
 					"last_flag":a[6][:-1],
 					"flag_count":1,
+					"cftf":{csip:{"ipv4":sip,"count":1,},}, # objects of crc32b=ipv4={"ipv4":"....",..}
 				},
 			}
 		}
@@ -402,7 +399,14 @@ def parse( line:str ):
 			"first_ts":tots(a[0]),
 			"last_flag":a[6][:-1],
 			"flag_count":1,
+			"cftf":{csip:{"ipv4":sip,"count":1,},}, # objects of crc32b=ipv4={"ipv4":"....",..}
 		}
+	#
+	if csip not in oftt[cftt]['cftf']:
+		print("parse() Adding sip {}".format(sip))
+		oftt[cftt]['cftf'][csip] = {"ipv4":sip,"count":1,}
+	else:
+		oftt[cftt]['cftf'][csip]['count']+=1
 	#
 	MemoryFlood[cfto]["ftt"] = oftt
 #
@@ -424,7 +428,7 @@ def load_pcap():
 #
 def start():
 	#
-	load_blocks()
+	#load_blocks()
 	#
 	# Create a new thread that runs the my_function
 	#thread = threading.Thread(target=check)
