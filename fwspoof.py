@@ -403,7 +403,7 @@ def parse( line:str ):
 		}
 	#
 	if csip not in oftt[cftt]['cftf']:
-		print("parse() Adding sip {}".format(sip))
+		#print("parse() Adding sip {}".format(sip))
 		oftt[cftt]['cftf'][csip] = {"ipv4":sip,"count":1,}
 	else:
 		oftt[cftt]['cftf'][csip]['count']+=1
