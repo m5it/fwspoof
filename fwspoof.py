@@ -428,7 +428,7 @@ def load_pcap():
 #
 def start():
 	#
-	#load_blocks()
+	load_blocks()
 	#
 	# Create a new thread that runs the my_function
 	#thread = threading.Thread(target=check)
