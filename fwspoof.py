@@ -386,6 +386,9 @@ def parse( line:str ):
 			MemoryFlood[cfto]["flag_count"] = 1
 			MemoryFlood[cfto]["last_flag"] = flag
 		MemoryFlood[cfto]["last_ts"]    = tots(a[0])
+		#
+		if MemoryFlood[cfto]["flag_count_sr"]<0:
+			MemoryFlood[cfto]["flag_count_sr"]=0
 	# # # Check third octet
 	oftt = MemoryFlood[cfto]["ftt"]
 	if cftt in oftt:
@@ -402,6 +405,9 @@ def parse( line:str ):
 			oftt[cftt]["flag_count_sr"] += 1
 		else:
 			oftt[cftt]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
+		#
+		if oftt[cftt]["flag_count_sr"]<0:
+			oftt[cftt]["flag_count_sr"]=0
 		#
 		oftt[cftt]["last_flag"]    = flag
 		oftt[cftt]["last_ts"]    = tots(a[0])
