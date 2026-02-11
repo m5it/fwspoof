@@ -104,13 +104,14 @@ Options = {
 		'short':'-F',
 		'long':'--flag',
 		'accept':True, # accept value
-		'value':'[S]',
+		'value':'[S],[R]',
 		#'exec':VERSION,
 	},
 }
 #
 Globals = {
 	"run":False,
+	"flags":[], # [S],[R]
 }
 #--
 #
@@ -243,12 +244,12 @@ def check_blocks():
 def block_ip_range(cidr):
 	out("block_ip_range() START, cidr: {}".format( cidr ))
 	# Block the IP range using iptables
-	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
+	#os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
 #
 def unblock_ip_range(cidr):
 	out("unblock_ip_range() START, cidr: {}".format( cidr ))
 	# Unblock the IP range using iptables
-	os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
+	#os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
 #
 def perform_block( MF ):
 	global MemoryBlock
@@ -265,7 +266,7 @@ def perform_block( MF ):
 		if MF['k'] in MemoryBlock and k in MemoryBlock[MF['k']]:
 			continue
 		
-		if MFF['flag_count'] >= Options[crc32b('-m')]['value']:
+		if (MFF['flag_count'] >= Options[crc32b('-m')]['value'] or MFF['flag_count_sr'] >= Options[crc32b('-m')]['value']):
 			out("perform_block() BLOCK ftt {} => {}".format( k, MFF ))
 			cidr = "{}.0/24".format( MFF['ftt'] )
 			cftt = k # cftt is crc32b of first three octet of ip
@@ -286,7 +287,7 @@ def exists_block( K, MF ):
 # check for problems on count of bad things or time on these items..
 # check() can block or unblock bad trash.
 def check_suspect():
-	global MemoryFlood, MemoryBlock, Stats
+	global MemoryFlood, MemoryBlock, Stats, CheckBlock, Options, Globals
 	#
 	out("check_suspect() START, all: {}".format( len(MemoryFlood) ))
 	if len(MemoryFlood)<=0:
@@ -300,7 +301,8 @@ def check_suspect():
 			MF = MemoryFlood[k]
 			#
 			#if MF['last_flag']=='[S]' and MF['flag_count'] >= Options[crc32b('-M')]['value']:
-			if MF['last_flag']==Options[crc32b('-F')]['value'] and MF['flag_count'] >= Options[crc32b('-M')]['value']:
+			#if MF['last_flag']==Options[crc32b('-F')]['value'] and MF['flag_count'] >= Options[crc32b('-M')]['value']:
+			if MF['last_flag'] in Globals['flags'] and (MF['flag_count'] >= Options[crc32b('-M')]['value'] or MF['flag_count_sr'] >= Options[crc32b('-M')]['value']):
 				out("check_suspect() WARNING k: {}, MF: {}".format( k, MF ))
 				#
 				if exists_block(k,MF):
@@ -344,6 +346,7 @@ def parse( line:str ):
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
 	CDTS = cdts()
+	flag = a[6][:-1]
 	#
 	if cfto not in MemoryFlood:
 		#
@@ -354,7 +357,8 @@ def parse( line:str ):
 			"last_ts" :tots(a[0]),
 			"first_ts":tots(a[0]),
 			"last_flag":a[6][:-1],
-			"flag_count":1,
+			"flag_count":1 if flag=='[S]' else 0,
+			"flag_count_sr":(1 if flag in Globals["flags"] else 0),
 			"ftt":{
 				cftt:{
 					"ftt"     :ftt,
@@ -363,32 +367,44 @@ def parse( line:str ):
 					"last_ts" :tots(a[0]),
 					"first_ts":tots(a[0]),
 					"last_flag":a[6][:-1],
-					"flag_count":1,
-					"cftf":{csip:{"ipv4":sip,"count":1,},}, # objects of crc32b=ipv4={"ipv4":"....",..}
+					"flag_count":1 if flag=='[S]' else 0,
+					"flag_count_sr":(1 if flag in Globals["flags"] else 0),
+					"cftf":{csip:{"ipv4":sip,"count":1,"count_sr":(1 if flag in Globals["flags"] else 0),"flags":[flag]},}, # objects of crc32b=ipv4={"ipv4":"....",..}
 				},
 			}
 		}
 	else:
+		#
+		if flag in Globals['flags'] and (MemoryFlood[cfto]["last_flag"]=='[S]' and flag=='[R]' or MemoryFlood[cfto]["last_flag"]=='[R]' and flag=='[S]'):
+			MemoryFlood[cfto]["flag_count_sr"] += 1
+		else:
+			MemoryFlood[cfto]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
 		# Flag is the same as previous was! (Warning)
-		if MemoryFlood[cfto]["last_flag"] == a[6][:-1]:
-			MemoryFlood[cfto]["last_ts"]    = tots(a[0])
+		if MemoryFlood[cfto]["last_flag"] == flag and flag=='[S]':
 			MemoryFlood[cfto]["flag_count"] += 1
 		else:
-			MemoryFlood[cfto]["last_ts"]    = tots(a[0])
 			MemoryFlood[cfto]["flag_count"] = 1
-			MemoryFlood[cfto]["last_flag"] = a[6][:-1]
+			MemoryFlood[cfto]["last_flag"] = flag
+		MemoryFlood[cfto]["last_ts"]    = tots(a[0])
 	# # # Check third octet
 	oftt = MemoryFlood[cfto]["ftt"]
 	if cftt in oftt:
 		# cftt exists
-		if oftt[cftt]["last_flag"] == a[6][:-1]:
+		if oftt[cftt]["last_flag"] == flag and flag=='[S]':
 			# same flag, increase count
-			oftt[cftt]["last_ts"]    = tots(a[0])
 			oftt[cftt]["flag_count"] += 1
 		else:
 			# flag change, zerro count
-			oftt[cftt]["last_ts"]    = tots(a[0])
 			oftt[cftt]["flag_count"] = 1
+		#
+		#if oftt[cftt]["last_flag"] in Globals['flags']:
+		if flag in Globals['flags'] and (oftt[cftt]["last_flag"]=='[S]' and flag=='[R]' or oftt[cftt]["last_flag"]=='[R]' and flag=='[S]'):
+			oftt[cftt]["flag_count_sr"] += 1
+		else:
+			oftt[cftt]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
+		#
+		oftt[cftt]["last_flag"]    = flag
+		oftt[cftt]["last_ts"]    = tots(a[0])
 	else:
 		# cftt dont exists
 		oftt[cftt] = {
@@ -397,16 +413,26 @@ def parse( line:str ):
 			"cdts"    :CDTS,
 			"last_ts" :tots(a[0]),
 			"first_ts":tots(a[0]),
-			"last_flag":a[6][:-1],
-			"flag_count":1,
-			"cftf":{csip:{"ipv4":sip,"count":1,},}, # objects of crc32b=ipv4={"ipv4":"....",..}
+			"last_flag":flag,
+			"flag_count":1 if flag=='[S]' else 0,
+			"flag_count_sr":(1 if flag in Globals["flags"] else 0),
+			"cftf":{csip:{"ipv4":sip,"count":1,"count_sr":(1 if flag in Globals["flags"] else 0),"flags":[flag]},}, # objects of crc32b=ipv4={"ipv4":"....",..}
 		}
 	#
 	if csip not in oftt[cftt]['cftf']:
 		#print("parse() Adding sip {}".format(sip))
-		oftt[cftt]['cftf'][csip] = {"ipv4":sip,"count":1,}
+		oftt[cftt]['cftf'][csip] = {"ipv4":sip,"count":1,"count_sr":(1 if flag in Globals["flags"] else 0),"flags":[flag]}
 	else:
 		oftt[cftt]['cftf'][csip]['count']+=1
+		pflag = oftt[cftt]['cftf'][csip]['flags'][ len(oftt[cftt]['cftf'][csip]['flags'])-1 ]
+		#
+		if pflag=='[S]' and flag=='[R]' or pflag=='[R]' and flag=='[S]':
+			oftt[cftt]['cftf'][csip]['count_sr']+=1
+		else:
+			oftt[cftt]['cftf'][csip]['count_sr']=0
+		if len(oftt[cftt]['cftf'][csip]['flags'])>=4:
+			oftt[cftt]['cftf'][csip]['flags'].pop()
+		oftt[cftt]['cftf'][csip]['flags'].append( flag )
 	#
 	MemoryFlood[cfto]["ftt"] = oftt
 #
@@ -439,7 +465,7 @@ def start():
 	#thread.join()
 #
 def main(argv):
-	global Options, MemoryFlood
+	global Globals, Options, MemoryFlood
 	#
 	opt_help=False
 	#
@@ -466,6 +492,11 @@ def main(argv):
 	if Options[crc32b('-h')]['value']:
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
+	#
+	Globals["flags"] = Options[crc32b('-F')]['value'].split(",")
+	#print("DEBUG Globals: ")
+	#print(Globals)
+	#sys.exit(1)
 	#
 	start()
 
