@@ -10,7 +10,8 @@
 #
 # At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.
 #--
-# v0.1
+# v0.1             supported SYN attack
+# v0.2 (12.2.2026) supported SYN/RESET attack
 #
 # First we save received packets with tcpdump, like this we can filter out what is not necessary to read.
 # Second we read saved packets and pass trough pipe to fwspoof to analyze data.
