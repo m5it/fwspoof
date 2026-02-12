@@ -1,4 +1,5 @@
 #-- (5.2.2026) - by t3ch aka B.K. => w4d4f4k at gmail dot com
+# v0.2 - 12.2.2026 - added syn / reset attack support
 # v0.1 - 7.2.2026
 #        8.2.2026 - first bugs. It block just one range instead of four. Quick fix is here.
 #--------------------------------------------------------------
