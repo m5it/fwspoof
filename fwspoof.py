@@ -226,7 +226,7 @@ def load_blocks():
 	out("load_blocks() END len {}".format( len(MemoryBlock) ))
 	out(MemoryBlock)
 #-- check_blocks()
-# used to unblock suspects when dont attacking anymore.
+# used to unblock suspects if/when attack stop.
 def check_blocks():
 	global MemoryBlock, CheckBlock, Stats
 	out("check_blocks() START")
@@ -242,14 +242,16 @@ def check_blocks():
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
 #
 def block_ip_range(cidr):
-	out("block_ip_range() START, cidr: {}".format( cidr ))
+	#out("block_ip_range() START, cidr: {}".format( cidr ))
+	print("block_ip_range() START, cidr: {}".format( cidr ))
 	# Block the IP range using iptables
-	os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
+	#os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
 #
 def unblock_ip_range(cidr):
-	out("unblock_ip_range() START, cidr: {}".format( cidr ))
+	#out("unblock_ip_range() START, cidr: {}".format( cidr ))
+	print("unblock_ip_range() START, cidr: {}".format( cidr ))
 	# Unblock the IP range using iptables
-	os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
+	#os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
 #
 def perform_block( MF ):
 	global MemoryBlock
@@ -294,35 +296,35 @@ def check_suspect():
 		return False
 	Stats['uniq'] = len(MemoryFlood)
 	#
-	while Globals['run']:
+	#while Globals['run']:
+	#
+	#for k in reversed(MemoryFlood):
+	for k in MemoryFlood:
+		MF = MemoryFlood[k]
 		#
-		#for k in reversed(MemoryFlood):
-		for k in MemoryFlood:
-			MF = MemoryFlood[k]
+		#if MF['last_flag']=='[S]' and MF['flag_count'] >= Options[crc32b('-M')]['value']:
+		#if MF['last_flag']==Options[crc32b('-F')]['value'] and MF['flag_count'] >= Options[crc32b('-M')]['value']:
+		if MF['last_flag'] in Globals['flags'] and (MF['flag_count'] >= Options[crc32b('-M')]['value'] or MF['flag_count_sr'] >= Options[crc32b('-M')]['value']):
+			out("check_suspect() WARNING k: {}, MF: {}".format( k, MF ))
 			#
-			#if MF['last_flag']=='[S]' and MF['flag_count'] >= Options[crc32b('-M')]['value']:
-			#if MF['last_flag']==Options[crc32b('-F')]['value'] and MF['flag_count'] >= Options[crc32b('-M')]['value']:
-			if MF['last_flag'] in Globals['flags'] and (MF['flag_count'] >= Options[crc32b('-M')]['value'] or MF['flag_count_sr'] >= Options[crc32b('-M')]['value']):
-				out("check_suspect() WARNING k: {}, MF: {}".format( k, MF ))
-				#
-				if exists_block(k,MF):
-					#out("Already blocked! {} - {}".format( k, MF['fto'] ))
-					out("check_suspect() Adding to CheckBlock D1 k: {}".format(MF['k']))
-					CheckBlock[k]=True
-					Stats['blocked']+=1
-					continue
-				else:
-					out("Block dont exists! {} - {}".format( k, MF['fto'] ))
-				#
-				if perform_block( MF ):
-					out("check_suspect() Adding to CheckBlock D2 k: {}".format(MF['k']))
-					CheckBlock[MF['k']]=True
-					Stats['blocking']+=1
-					Stats['blocked']-=1
-				out("---------------------------------------------")
+			if exists_block(k,MF):
+				#out("Already blocked! {} - {}".format( k, MF['fto'] ))
+				out("check_suspect() Adding to CheckBlock D1 k: {}".format(MF['k']))
+				CheckBlock[k]=True
+				Stats['blocked']+=1
+				continue
 			else:
-				out("check_suspect() OK {}".format( MF ))
-		Globals['run'] = False
+				out("Block dont exists! {} - {}".format( k, MF['fto'] ))
+			#
+			if perform_block( MF ):
+				out("check_suspect() Adding to CheckBlock D2 k: {}".format(MF['k']))
+				CheckBlock[MF['k']]=True
+				Stats['blocking']+=1
+				Stats['blocked']-=1
+			out("---------------------------------------------")
+		else:
+			out("check_suspect() OK {}".format( MF ))
+	Globals['run'] = False
 	return True
 #
 def parse( line:str ):
@@ -337,7 +339,7 @@ def parse( line:str ):
 	sip = ".".join(a[2].split(".")[:4]) # source ip
 	csip = crc32b(sip)
 	
-	dip = ".".join(a[4].split(".")[:4]) # source ip
+	dip = ".".join(a[4].split(".")[:4])
 	#out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	Stats["all"]+=1
 	# Check if sip between allowed, lets skip it so we wont block our selfs... :*
@@ -460,7 +462,7 @@ def load_pcap():
 #
 def start():
 	#
-	load_blocks()
+	#load_blocks()
 	#
 	# Create a new thread that runs the my_function
 	#thread = threading.Thread(target=check)

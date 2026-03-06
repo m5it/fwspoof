@@ -21,10 +21,13 @@ def genLongArgs(Options):
 	return ret
 #
 def tots( data:str ):
-	parts = data.split('.')
-	hours, minutes, seconds = map(int, parts[0].split(':'))
-	microseconds = int(parts[1])
-	return (hours * 3600) + (minutes * 60) + seconds + (microseconds / 1e6)
+	try:
+		parts = data.split('.')
+		hours, minutes, seconds = map(int, parts[0].split(':'))
+		microseconds = int(parts[1])
+		return (hours * 3600) + (minutes * 60) + seconds + (microseconds / 1e6)
+	except Exception as E:
+		return None
 #
 def cts():
 	current_time = datetime.now()
