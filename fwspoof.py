@@ -107,6 +107,14 @@ Options = {
 		'value':'[S],[R]',
 		#'exec':VERSION,
 	},
+	crc32b('-C'):{
+		'name':'ConnectionType',
+		'short':'-C',
+		'long':'--con_type',
+		'accept':True, # accept value
+		'value':"FORWARD", # FORWARD or INPUT or OUTPUT
+		#'exec':VERSION,
+	},
 }
 #
 Globals = {
@@ -243,15 +251,15 @@ def check_blocks():
 #
 def block_ip_range(cidr):
 	#out("block_ip_range() START, cidr: {}".format( cidr ))
-	print("block_ip_range() START, cidr: {}".format( cidr ))
+	print("block_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
 	# Block the IP range using iptables
-	#os.system(f'iptables -A FORWARD -s {cidr} -j DROP')
+	os.system(f'iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
 def unblock_ip_range(cidr):
 	#out("unblock_ip_range() START, cidr: {}".format( cidr ))
-	print("unblock_ip_range() START, cidr: {}".format( cidr ))
+	print("unblock_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
 	# Unblock the IP range using iptables
-	#os.system(f'iptables -D FORWARD -s {cidr} -j DROP')
+	os.system(f'iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
 def perform_block( MF ):
 	global MemoryBlock
@@ -462,7 +470,7 @@ def load_pcap():
 #
 def start():
 	#
-	#load_blocks()
+	load_blocks()
 	#
 	# Create a new thread that runs the my_function
 	#thread = threading.Thread(target=check)
