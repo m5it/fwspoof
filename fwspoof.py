@@ -258,14 +258,14 @@ def check_blocks():
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
 #
 def block_ip_range(cidr):
-	#out("block_ip_range() START, cidr: {}".format( cidr ))
-	print("block_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
+	out("block_ip_range() START, cidr: {}".format( cidr ))
+	#print("block_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
 	# Block the IP range using iptables
 	os.system('iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
 def unblock_ip_range(cidr):
-	#out("unblock_ip_range() START, cidr: {}".format( cidr ))
-	print("unblock_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
+	out("unblock_ip_range() START, cidr: {}".format( cidr ))
+	#print("unblock_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
 	# Unblock the IP range using iptables
 	os.system('iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
