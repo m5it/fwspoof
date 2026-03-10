@@ -215,7 +215,7 @@ sys.excepthook = handle_exception
 def load_blocks():
 	global MemoryBlock
 	out("load_blocks() START")
-	output = subprocess.check_output(['iptables','-L','FORWARD','-n']).decode('utf-8')
+	output = subprocess.check_output(['iptables','-L',Options[crc32b('-C')]['value'],'-n']).decode('utf-8')
 	for line in output.split('\n'):
 		# DROP       all  --  45.187.56.0/22       0.0.0.0/0
 		if rmatch(line,"^DROP.*"):
@@ -261,13 +261,13 @@ def block_ip_range(cidr):
 	#out("block_ip_range() START, cidr: {}".format( cidr ))
 	print("block_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
 	# Block the IP range using iptables
-	os.system(f'iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
+	os.system('iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
 def unblock_ip_range(cidr):
 	#out("unblock_ip_range() START, cidr: {}".format( cidr ))
 	print("unblock_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
 	# Unblock the IP range using iptables
-	os.system(f'iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
+	os.system('iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
 def perform_block( MF ):
 	global MemoryBlock
@@ -359,7 +359,6 @@ def parse( line:str ):
 	#out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	Stats["all"]+=1
 	# Check if sip between allowed, lets skip it so we wont block our selfs... :*
-	
 	#
 	cfto = crc32b(fto)
 	cftt = crc32b(ftt)
