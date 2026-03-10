@@ -115,6 +115,14 @@ Options = {
 		'value':"FORWARD", # FORWARD or INPUT or OUTPUT
 		#'exec':VERSION,
 	},
+	crc32b('-D'):{
+		'name':'DontUnblock',
+		'short':'-D',
+		'long':'--dont_unblock',
+		'accept':False, # accept value
+		'value':False,
+		#'exec':VERSION,
+	},
 }
 #
 Globals = {
@@ -464,7 +472,9 @@ def load_pcap():
 		out("load_pcap() Failed. MemoryFood file.pcap empty!")
 		return False
 	#
-	check_blocks()
+	if Options[crc32b('-D')]['value']==False:
+		print("DEBUG check_blocks() START")
+		check_blocks()
 	Globals['run'] = False
 	return True
 #
