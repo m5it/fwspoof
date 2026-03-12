@@ -26,11 +26,11 @@
 #-  or<br>
 #-        tcpdump -i enp1s0 -nn -s0 tcp and dst 10.0.5.10 and (not port 22) -w out.cap -G 1800<br>
 #-<br>
-#-  2.)   tcpdump -r out.cap -nn -s0 | python fwspoof.py -S -m 2 -M 13 -D -C INPUT<br>
-#-  3.)   python fwspoof.py -h<br>
-#-        python fwspoof.py -v<br>
-#-        python fwspoof.py -V # verbose | debug output<br>
-#--<br>
+  2.)   tcpdump -r out.cap -nn -s0 | python fwspoof.py -S -m 2 -M 13 -D -C INPUT<br>
+  3.)   python fwspoof.py -h<br>
+        python fwspoof.py -v<br>
+        python fwspoof.py -V # verbose | debug output<br>
+<br>
 # Examples for thinking.. future...
 tcpdump -r your_capture.pcap -c 1000  # Skip first 1000 packets
 #
