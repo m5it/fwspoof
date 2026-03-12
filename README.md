@@ -1,6 +1,6 @@
 # (5.2.2026) - by t3ch aka B.K. => w4d4f4k at gmail dot com
-#- v0.2 - 12.2.2026 - added syn / reset attack support
-#- v0.1 - 7.2.2026
+#- v0.2 - 12.2.2026 - added syn / reset attack support<br>
+#- v0.1 - 7.2.2026<br>
 #-        8.2.2026  - first bugs. It block just one range instead of four. Quick fix is here.
 #-        11.3.2026 - noted bug with passing arguments from terminal to program. looks old python versions have problems and dont works as expected.
 #-                    i mean when running program with arguments Ex.: python3 fwspoof.py -D -S -M 15 -m 2 -C INPUT -V
