@@ -431,8 +431,8 @@ def parse( line:str ):
 		rst=False
 		if flag in Globals['flags'] and (MemoryFlood[cfto]["last_flag"]=='[S]' and flag=='[R]' or MemoryFlood[cfto]["last_flag"]=='[R]' and flag=='[S]'):
 			MemoryFlood[cfto]["flag_count_sr"] += 1
+		else:
 			rst=True
-		#else:
 		#	MemoryFlood[cfto]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
 		# Flag is the same as previous was! (Warning)
 		if MemoryFlood[cfto]["last_flag"] == flag and flag=='[S]':
@@ -453,6 +453,7 @@ def parse( line:str ):
 		if flag in Globals['flags'] and (oftt[cftt]["last_flag"]=='[S]' and flag=='[R]' or oftt[cftt]["last_flag"]=='[R]' and flag=='[S]'):
 			oftt[cftt]["flag_count_sr"] += 1
 		else:
+			rst=True
 			oftt[cftt]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
 		#
 		#if oftt[cftt]["flag_count_sr"]<0:
