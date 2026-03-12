@@ -123,6 +123,14 @@ Options = {
 		'value':False,
 		#'exec':VERSION,
 	},
+	crc32b('-T'):{
+		'name':'Test',
+		'short':'-T',
+		'long':'--test',
+		'accept':False, # accept value
+		'value':False,
+		#'exec':VERSION,
+	},
 }
 #
 Globals = {
@@ -260,14 +268,16 @@ def check_blocks():
 def block_ip_range(cidr):
 	out("block_ip_range() START, cidr: {}".format( cidr ))
 	#print("block_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
-	# Block the IP range using iptables
-	os.system('iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
+	if Options[crc32b('-T')]['value']==False:
+		# Block the IP range using iptables
+		os.system('iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
 def unblock_ip_range(cidr):
 	out("unblock_ip_range() START, cidr: {}".format( cidr ))
 	#print("unblock_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
-	# Unblock the IP range using iptables
-	os.system('iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
+	if Options[crc32b('-T')]['value']==False:
+		# Unblock the IP range using iptables
+		os.system('iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
 #
 def perform_block( MF ):
 	global MemoryBlock
@@ -338,16 +348,17 @@ def check_suspect():
 				Stats['blocking']+=1
 				Stats['blocked']-=1
 			out("---------------------------------------------")
-		else:
-			out("check_suspect() OK {}".format( MF ))
+		#else:
+		#	out("check_suspect() OK {}".format( MF ))
 	Globals['run'] = False
 	return True
 #
 def parse( line:str ):
 	#run() line 12:05:54.906213 IP 177.37.46.55.19974 > 192.168.0.69.443: Flags [S], seq 1823246134, win 64240, options [mss 1300,nop,wscale 8,nop,nop,sackOK], length 0
 	#parse() fto(7e1c7af0): 177.37, ftt(cd176a0b): 177.37.46
-
 	a = line.split(" ")
+	if len(a)<=12:
+		return False
 	#
 	fto = ".".join(a[2].split(".")[:2]) # First two octets of IP
 	ftt = ".".join(a[2].split(".")[:3]) # First three octets of IP
@@ -458,6 +469,7 @@ def parse( line:str ):
 		oftt[cftt]['cftf'][csip]['flags'].append( flag )
 	#
 	MemoryFlood[cfto]["ftt"] = oftt
+	return True
 #
 def load_pcap():
 	global MemoryFlood, Options, Globals
@@ -479,7 +491,8 @@ def load_pcap():
 #
 def start():
 	#
-	load_blocks()
+	if Options[crc32b('-T')]['value']==False:
+		load_blocks()
 	#
 	# Create a new thread that runs the my_function
 	#thread = threading.Thread(target=check)
