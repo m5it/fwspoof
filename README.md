@@ -28,3 +28,8 @@
 #        python fwspoof.py -v
 #        python fwspoof.py -V # verbose | debug output
 #--
+# Examples
+tcpdump -r your_capture.pcap -c 1000  # Skip first 1000 packets
+#
+dd if=your_capture.pcap of=partial.pcap skip=1000 bs=1
+tcpdump -r partial.pcap
