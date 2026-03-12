@@ -6,3 +6,4 @@ test/*
 b
 b/*
 *.out
+allowed.ips

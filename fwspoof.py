@@ -145,6 +145,7 @@ Options = {
 Globals = {
 	"run":False,
 	"flags":[], # [S],[R]
+	"allowed":[], # array of allowed ips. Retrived from allowed.ips file!
 }
 #--
 #
@@ -387,7 +388,9 @@ def parse( line:str ):
 	#
 	sip = ".".join(a[2].split(".")[:4]) # source ip
 	csip = crc32b(sip)
-	
+	if sip in Globals["allowed"]:
+		#out("Skipping us... {}",sip)
+		return False
 	dip = ".".join(a[4].split(".")[:4])
 	#out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	Stats["all"]+=1
@@ -556,6 +559,11 @@ def main(argv):
 	if Options[crc32b('-h')]['value']:
 		Options[crc32b('-h')]['exec']()
 		sys.exit(1)
+	#
+	atmp=[]
+	if file_exists("allowed.ips"):
+		Globals["allowed"] = file_content("allowed.ips").split("\n")
+	print("DEBUG Globals: ",Globals)
 	#
 	Globals["flags"] = Options[crc32b('-F')]['value'].split(",")
 	#print("DEBUG Globals: ")
