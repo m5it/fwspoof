@@ -12,7 +12,6 @@
 #- This kind of attack is not visible in normal logs of http servers because of this is necessary to use tools like tcpdump, wireshark or similar.<br>
 #<br>
 # At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.<br>
-#--
 #- v0.1             supported SYN attack<br>
 #- v0.2 (12.2.2026) supported SYN/RESET attack<br>
 #-<br>
