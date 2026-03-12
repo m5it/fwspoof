@@ -99,6 +99,14 @@ Options = {
 		'value':False,
 		#'exec':VERSION,
 	},
+	crc32b('-S'):{
+		'name':'Stats',
+		'short':'-S',
+		'long':'--stats',
+		'accept':False, # accept value
+		'value':False,
+		#'exec':VERSION,
+	},
 	crc32b('-F'):{
 		'name':'flag',
 		'short':'-F',
@@ -197,17 +205,18 @@ def cleanup():
 	global Options,Stats
 	out("cleanup() START")
 	#
-	i=1
-	for x in MemoryFlood:
-		ut = None
-		try:
-			ut = MemoryFlood[x]['last_ts'] - MemoryFlood[x]['first_ts']
-		except Exception as E:
-			out("Fail!")
-		print("{}.) {} => {} {} {} {}/s ftt.len: {}".format(i,MemoryFlood[x]['fto'], MemoryFlood[x]['last_flag'],MemoryFlood[x]['flag_count'],MemoryFlood[x]['flag_count_sr'], ut, len(MemoryFlood[x]['ftt']) ))
-		for x1 in MemoryFlood[x]['ftt']:
-			print("x1",len(MemoryFlood[x]['ftt'][x1]['cftf']))
-		i+=1
+	if Options[crc32b('-S')]['value']:
+		i=1
+		for x in MemoryFlood:
+			ut = None
+			try:
+				ut = MemoryFlood[x]['last_ts'] - MemoryFlood[x]['first_ts']
+			except Exception as E:
+				out("Fail!")
+			print("{}.) {} => {} {} {} {}/s ftt.len: {}".format(i,MemoryFlood[x]['fto'], MemoryFlood[x]['last_flag'],MemoryFlood[x]['flag_count'],MemoryFlood[x]['flag_count_sr'], ut, len(MemoryFlood[x]['ftt']) ))
+			for x1 in MemoryFlood[x]['ftt']:
+				print("x1",len(MemoryFlood[x]['ftt'][x1]['cftf']))
+			i+=1
 	#
 	out("Stats: ")
 	print(Stats)
