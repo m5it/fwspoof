@@ -1,10 +1,29 @@
- Copyright 2026 Blaz Kos
-Licensed under the Apache License, Version 2.0 (the "License");
+Copyright 2026 Blaz Kos
+Licensed under the Modified Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-http://www.apache.org/licenses/LICENSE-2.0
+https://grandekos.com/LICENSE
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+ADDITIONAL TERMS:
+
+1. NOTIFICATION OBLIGATION: Any commercial use of this software requires written notification to the Licensor within 30 days of first use. Notification must 
+include details of the use case, number of users, and intended deployment.
+
+2. PAYMENT OBLIGATION: Commercial use of this software requires payment of a license fee as determined by the Licensor. The Licensee agrees to pay all fees within 
+30 days of receiving an invoice from the Licensor.
+
+3. AUDIT RIGHTS: The Licensor reserves the right to audit Licensee's use of the software to ensure compliance with this License. The Licensee agrees to cooperate 
+fully with any such audit and provide all necessary information.
+
+4. TERMINATION FOR NON-COMPLIANCE: Failure to comply with the notification and payment obligations may result in immediate termination of this License and all 
+rights granted hereunder.
+
+5. GOVERNING LAW:
+   a. This License shall be governed by and construed in accordance with the laws of Spain.
+   b. Any legal action arising under this License shall be brought exclusively in the courts of Las Palmas de Gran Canaria, Canary Islands, Spain.
