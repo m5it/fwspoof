@@ -17,7 +17,7 @@
 # <hr>
 # Works:
 <br>
- 1.) First we save received packets with tcpdump, (useful for debugging) and like this we can filter out what is not necessary to read.<br>
+ 1.) First we save received packets with tcpdump, (useful for debugging as well).<br>
  2.) Second pass trough pipe to fwspoof to analyze data.<br>
  3.) FWSpoof decide depend on configuration or block or unblock suspects.<br>
 <br>
