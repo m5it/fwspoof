@@ -1,17 +1,17 @@
 # (5.2.2026) - by t3ch aka B.K. => w4d4f4k at gmail dot com
 #- v0.2 - 12.2.2026 - added syn / reset attack support<br>
 #- v0.1 - 7.2.2026<br>
-#-        8.2.2026  - first bugs. It block just one range instead of four. Quick fix is here.
-#-        11.3.2026 - noted bug with passing arguments from terminal to program. looks old python versions have problems and dont works as expected.
-#-                    i mean when running program with arguments Ex.: python3 fwspoof.py -D -S -M 15 -m 2 -C INPUT -V
-#--------------------------------------------------------------
-# FWSpoof.py - Working on cleaning of trash. Working on making trash useful. So you are welcome until you can! *** Kisses my bad friends.
-#
-# Script to prevent spoofed attack on http server.
-# Trying to focus only on this kind of attack. For other trash have other scripts like FWTrash.
-# This kind of attack is not visible in normal logs of http servers because of this is necessary to use tools like tcpdump, wireshark or similar.
-#
-# At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.
+#-        8.2.2026  - first bugs. It block just one range instead of four. Quick fix is here.<br>
+#-        11.3.2026 - noted bug with passing arguments from terminal to program. looks old python versions have problems and dont works as expected.<br>
+#-                    i mean when running program with arguments Ex.: python3 fwspoof.py -D -S -M 15 -m 2 -C INPUT -V<br>
+#--------------------------------------------------------------<br>
+# FWSpoof.py - Working on cleaning of trash. Working on making trash useful. So you are welcome until you can! *** Kisses my bad friends.<br>
+#-<br>
+#- Script to prevent spoofed attack on http server.<br>
+#- Trying to focus only on this kind of attack. For other trash have other scripts like FWTrash.<br>
+#- This kind of attack is not visible in normal logs of http servers because of this is necessary to use tools like tcpdump, wireshark or similar.<br>
+#<br>
+# At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.<br>
 #--
 # v0.1             supported SYN attack
 # v0.2 (12.2.2026) supported SYN/RESET attack
