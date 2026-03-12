@@ -47,7 +47,7 @@ def HELP():
 	print("HELP....\n")
 	for k in Options:
 		o=Options[k]
-		print("{} => {}".format( o['short'], o['name'] ))
+		print("{} = {} => {}".format( o['short'], o['name'], o['value'] ))
 #
 def VERSION():
 	global Version
