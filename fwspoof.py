@@ -254,7 +254,7 @@ def load_blocks():
 			# ['45.187.56.0/22', '0.0.0.0/0']
 			out("load_blocks() debug len: {}, data: {}".format( len(a), a ))
 			# match cidr only. Ex.: ip/22 or ip/24 or ip/whatever because preventing spoofed attacks.
-			if len(a)>0 and rmatch(a[0],".*\\/\\d++$"):
+			if len(a)>0 and rmatch(a[0],".*\\/\\d+$"):
 				# debug len: 2, data: ['37.60.250.29', '0.0.0.0/0']
 				# debug len: 2, data: ['45.156.129.52', '0.0.0.0/0']
 				# debug len: 2, data: ['45.187.56.0/22', '0.0.0.0/0']
