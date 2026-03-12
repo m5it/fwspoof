@@ -13,7 +13,7 @@
 #- This kind of attack is not visible in normal logs of http servers because of this is necessary to use tools like tcpdump, wireshark or similar.<br>
 <br>
 # At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.<br>
-<hr>
+# <hr>
 # Works:
 #-<br>
 #- 1.) First we save received packets with tcpdump, (useful for debugging) and like this we can filter out what is not necessary to read.<br>
