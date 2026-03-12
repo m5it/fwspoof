@@ -197,6 +197,18 @@ def cleanup():
 	global Options,Stats
 	out("cleanup() START")
 	#
+	i=1
+	for x in MemoryFlood:
+		ut = None
+		try:
+			ut = MemoryFlood[x]['last_ts'] - MemoryFlood[x]['first_ts']
+		except Exception as E:
+			out("Fail!")
+		print("{}.) {} => {} {} {} {}/s ftt.len: {}".format(i,MemoryFlood[x]['fto'], MemoryFlood[x]['last_flag'],MemoryFlood[x]['flag_count'],MemoryFlood[x]['flag_count_sr'], ut, len(MemoryFlood[x]['ftt']) ))
+		for x1 in MemoryFlood[x]['ftt']:
+			print("x1",len(MemoryFlood[x]['ftt'][x1]['cftf']))
+		i+=1
+	#
 	out("Stats: ")
 	print(Stats)
 	return True
@@ -403,30 +415,26 @@ def parse( line:str ):
 		}
 	else:
 		#
+		rst=False
 		if flag in Globals['flags'] and (MemoryFlood[cfto]["last_flag"]=='[S]' and flag=='[R]' or MemoryFlood[cfto]["last_flag"]=='[R]' and flag=='[S]'):
 			MemoryFlood[cfto]["flag_count_sr"] += 1
-		else:
-			MemoryFlood[cfto]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
+			rst=True
+		#else:
+		#	MemoryFlood[cfto]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
 		# Flag is the same as previous was! (Warning)
 		if MemoryFlood[cfto]["last_flag"] == flag and flag=='[S]':
 			MemoryFlood[cfto]["flag_count"] += 1
-		else:
+		elif rst:
 			MemoryFlood[cfto]["flag_count"] = 1
 			MemoryFlood[cfto]["last_flag"] = flag
 		MemoryFlood[cfto]["last_ts"]    = tots(a[0])
 		#
-		if MemoryFlood[cfto]["flag_count_sr"]<0:
-			MemoryFlood[cfto]["flag_count_sr"]=0
+		#if MemoryFlood[cfto]["flag_count_sr"]<0:
+		#	MemoryFlood[cfto]["flag_count_sr"]=0
 	# # # Check third octet
 	oftt = MemoryFlood[cfto]["ftt"]
 	if cftt in oftt:
-		# cftt exists
-		if oftt[cftt]["last_flag"] == flag and flag=='[S]':
-			# same flag, increase count
-			oftt[cftt]["flag_count"] += 1
-		else:
-			# flag change, zerro count
-			oftt[cftt]["flag_count"] = 1
+		rst=False
 		#
 		#if oftt[cftt]["last_flag"] in Globals['flags']:
 		if flag in Globals['flags'] and (oftt[cftt]["last_flag"]=='[S]' and flag=='[R]' or oftt[cftt]["last_flag"]=='[R]' and flag=='[S]'):
@@ -434,8 +442,16 @@ def parse( line:str ):
 		else:
 			oftt[cftt]["flag_count_sr"] -=1 # Agressive checking (-=1) Not aggressive will be (=1) :)
 		#
-		if oftt[cftt]["flag_count_sr"]<0:
-			oftt[cftt]["flag_count_sr"]=0
+		#if oftt[cftt]["flag_count_sr"]<0:
+		#	oftt[cftt]["flag_count_sr"]=0
+		
+		# cftt exists
+		if oftt[cftt]["last_flag"] == flag and flag=='[S]':
+			# same flag, increase count
+			oftt[cftt]["flag_count"] += 1
+		elif rst:
+			# flag change, zerro count
+			oftt[cftt]["flag_count"] = 1
 		#
 		oftt[cftt]["last_flag"]    = flag
 		oftt[cftt]["last_ts"]    = tots(a[0])
