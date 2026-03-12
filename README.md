@@ -14,7 +14,6 @@
 # At moment script can run every X seconds to collect data and find trash... Data should be read from x.cap file that is created with tcpdump or similar software.<br>
 #- v0.1             supported SYN attack<br>
 #- v0.2 (12.2.2026) supported SYN/RESET attack<br>
-#-<br>
 # Works:
 #-<br>
 #- 1.) First we save received packets with tcpdump, (useful for debugging) and like this we can filter out what is not necessary to read.<br>
