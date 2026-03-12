@@ -16,9 +16,11 @@
 #- v0.1             supported SYN attack<br>
 #- v0.2 (12.2.2026) supported SYN/RESET attack<br>
 #-<br>
-#- First we save received packets with tcpdump, (useful for debugging) and like this we can filter out what is not necessary to read.<br>
-#- Second pass trough pipe to fwspoof to analyze data.<br>
-#- fwspoof decide depend on configuration or block or unblock suspects.<br>
+# Works:
+#-<br>
+#- 1.) First we save received packets with tcpdump, (useful for debugging) and like this we can filter out what is not necessary to read.<br>
+#- 2.) Second pass trough pipe to fwspoof to analyze data.<br>
+#- 3.) FWSpoof decide depend on configuration or block or unblock suspects.<br>
 #-<br>
 # Usage (10.0.5.10) is server that is getting attacked:<br>
 #-  1.)   tcpdump -i enp1s0 -nn -s0 tcp and dst 10.0.5.10 and (not port 22) -w out.cap -G 1800 --print<br>
