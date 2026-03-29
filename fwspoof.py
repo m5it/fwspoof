@@ -531,7 +531,8 @@ def parse( line:str ):
 		# Check specific IP. Another way so no need to block whole range.
 		if Options[crc32b('-s')]['value'] and ( oftt[cftt]['cftf'][csip]['count'] >= Options[crc32b('-m')]['value'] or oftt[cftt]['cftf'][csip]['count_sr'] >= Options[crc32b('-r')]['value'] ):
 			print("Warning({} | {}={}): src: {} attacking({}|{}), dst: {}".format(fto,ftt,len(oftt[cftt]['cftf']),sip,oftt[cftt]['cftf'][csip]['count'],oftt[cftt]['cftf'][csip]['count_sr'],dip))
-			#block_ip()
+			#
+			block_ip(sip)
 			#CheckBlockV4[csip] = True
 			CheckBlockV4[csip] = {
 				"csip":csip,
