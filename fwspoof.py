@@ -76,7 +76,7 @@ Options = {
 		'value':False,
 		'exec':VERSION,
 	},
-	crc32b('-M'):{
+	crc32b('-M'):{ # max limit for syn and syn+reset attack on whole range /24
 		'name':'max_flag_count',
 		'short':'-M',
 		'long':'--max_flag_count',
@@ -84,62 +84,70 @@ Options = {
 		'value':20,
 		#'exec':VERSION,
 	},
-	crc32b('-m'):{
+	crc32b('-m'):{ # max limit for syn attack. (Default 3)
 		'name':'max_flag_count_per_cidr',
 		'short':'-m',
 		'long':'--max_flag_count_per_cidr',
 		'accept':True, # accept value
-		'value':5,
+		'value':3,
 		#'exec':VERSION,
 	},
-	crc32b('-V'):{
+	crc32b('-r'):{ # max limit for syn + reset attack. (Default 5)
+		'name':'max_flag_count_per_cidr_sr',
+		'short':'-r',
+		'long':'--max_flag_count_per_cidr_sr',
+		'accept':True, # accept value
+		'value':5,
+	},
+	crc32b('-V'):{ # Verbose
 		'name':'verbose',
 		'short':'-V',
 		'long':'--verbose',
 		'accept':False, # accept value
 		'value':False,
-		#'exec':VERSION,
 	},
-	crc32b('-S'):{
+	crc32b('-S'):{ # Stats
 		'name':'Stats',
 		'short':'-S',
 		'long':'--stats',
 		'accept':False, # accept value
 		'value':False,
-		#'exec':VERSION,
 	},
-	crc32b('-F'):{
+	crc32b('-F'):{ # Flag ( Not recommended to change )
 		'name':'flag',
 		'short':'-F',
 		'long':'--flag',
 		'accept':True, # accept value
 		'value':'[S],[R]',
-		#'exec':VERSION,
 	},
-	crc32b('-C'):{
+	crc32b('-C'):{ # INPUT | FORWARD | OUTPUT ( Iptables use to block like )
 		'name':'ConnectionType',
 		'short':'-C',
 		'long':'--con_type',
 		'accept':True, # accept value
 		'value':"FORWARD", # FORWARD or INPUT or OUTPUT
-		#'exec':VERSION,
 	},
-	crc32b('-D'):{
+	crc32b('-D'):{ # Dont unblock if set. Once blocked, stay blocked.
 		'name':'DontUnblock',
 		'short':'-D',
 		'long':'--dont_unblock',
 		'accept':False, # accept value
 		'value':False,
-		#'exec':VERSION,
 	},
-	crc32b('-T'):{
+	crc32b('-T'):{ # Test ( Exclude usage of iptables )
 		'name':'Test',
 		'short':'-T',
 		'long':'--test',
 		'accept':False, # accept value
 		'value':False,
-		#'exec':VERSION,
 	},
+	crc32b('-s'):{ # Block specific IP instead of whole range (27.3.2026)
+		'name':'SpecificIP',
+		'short':'-s',
+		'long':'--specific_ip',
+		'accept':False, # accept value
+		'value':False,
+	}
 }
 #
 Globals = {
@@ -148,10 +156,12 @@ Globals = {
 	"allowed":[], # array of allowed ips. Retrived from allowed.ips file!
 }
 #--
-#
-CheckBlock = {} # object of three octed of ip crc32bs. Ex.: 'crc32b'=True
+# CheckBlock is used to check what was blocked in this/current loop
+CheckBlock   = {} # object of three octed of ip crc32bs. Ex.: 'crc32b'=True
+CheckBlockV4 = {}
+
 #-- MemoryFlood (used to find suspects by counting, key=flag_count and checking if flag repeats)
-#   Save all data and count. If they reach block value then we block them. (simple).
+#   Save all data and count. If they reach block value, then we block them. (simple).
 #   After X time not active we unblock them! (simple).
 MemoryFlood = {
 	# Ex.:
@@ -166,6 +176,7 @@ MemoryFlood = {
 	#    "ftt":{... same object as fto ...}
 	#}}
 }
+
 #-- MemoryBlock
 # a.) Set when blocked.
 # b.) Set when listed from iptables
@@ -182,6 +193,7 @@ MemoryBlock = {
 Stats = {
 	"all":0,
 	"uniq":0,
+	"single_blocking":0,
 	"blocking":0,
 	"unblocking":0,
 	"blocked":0,
@@ -227,14 +239,14 @@ def cleanup():
 def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
         # Let KeyboardInterrupt propagate
-        out("Exception: Keyboard Interrupt: {}".format(exc_type),{'verbose':True})
+        print("Exception: Keyboard Interrupt: {}".format(exc_type),{'verbose':True})
         return
     # Extract traceback info
     tb = traceback.extract_tb(exc_traceback)
     # Get the last frame (most recent error)
     frame = tb[-1]
     filename, line, func, text = frame
-    out(f"Exception: {exc_type.__name__}: {exc_value} (line {line} in {filename})",{'verbose':True,})
+    print(f"Exception: {exc_type.__name__}: {exc_value} (line {line} in {filename})",{'verbose':True,})
     # Optionally print full traceback
     traceback.print_exception(exc_type, exc_value, exc_traceback)
 #
@@ -261,14 +273,16 @@ def load_blocks():
 				# perform_list_block:  ['45.187.56.0/22', '0.0.0.0/0']
 				fto = ".".join(a[0].split(".")[:2])
 				ftt = ".".join(a[0].split(".")[:3])
+				sip = ".".join(a[0].split(".")[:4])
 				#
 				cfto = crc32b(fto)
 				cftt = crc32b(ftt)
+				csip = crc32b(sip)
 				out("load_blocks() fto({}): {}, ftt({}): {}".format( cfto, fto, cftt, ftt ))
 				# Save to MemoryBlock
-				if cfto not in MemoryBlock:
+				if cfto not in MemoryBlock:       # cfto = 2 octets Ex.: 127.0
 					MemoryBlock[cfto] = {}
-				if cftt not in MemoryBlock[cfto]:
+				if cftt not in MemoryBlock[cfto]: # cftt = 3 octets Ex.: 127.0.0
 					MemoryBlock[cfto][cftt] = {"ftt":ftt,"cidr":a[0],}
 	out("load_blocks() END len {}".format( len(MemoryBlock) ))
 	out(MemoryBlock)
@@ -284,23 +298,23 @@ def check_blocks():
 			for k1 in MemoryBlock[k]:
 				o = MemoryBlock[k][k1]
 				out("unblocking {}".format( o['cidr'] ))
-				unblock_ip_range( o['cidr'] )
+				unblock_ip( o['cidr'] )
 		else:
 			out("Leaving blocked {}".format( MemoryBlock[k] ))
 #
-def block_ip_range(cidr):
-	out("block_ip_range() START, cidr: {}".format( cidr ))
-	#print("block_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
+def block_ip(src):
+	out("block_ip() START, src: {}".format( src ))
+	#print("block_ip() START, cidr: {} CType: {}".format( src, Options[crc32b('-C')]['value'] ))
 	if Options[crc32b('-T')]['value']==False:
 		# Block the IP range using iptables
-		os.system('iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
+		os.system('iptables -A {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], src ))
 #
-def unblock_ip_range(cidr):
-	out("unblock_ip_range() START, cidr: {}".format( cidr ))
-	#print("unblock_ip_range() START, cidr: {} CType: {}".format( cidr, Options[crc32b('-C')]['value'] ))
+def unblock_ip(src):
+	out("unblock_ip() START, src: {}".format( src ))
+	#print("unblock_ip() START, src: {} CType: {}".format( src, Options[crc32b('-C')]['value'] ))
 	if Options[crc32b('-T')]['value']==False:
 		# Unblock the IP range using iptables
-		os.system('iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], cidr ))
+		os.system('iptables -D {} -s {} -j DROP'.format( Options[crc32b('-C')]['value'], src ))
 #
 def perform_block( MF ):
 	global MemoryBlock
@@ -322,7 +336,7 @@ def perform_block( MF ):
 			cidr = "{}.0/24".format( MFF['ftt'] )
 			cftt = k # cftt is crc32b of first three octet of ip
 			# Block cidr
-			block_ip_range( cidr )
+			block_ip( cidr )
 			blocked=True
 	return blocked
 #
@@ -351,10 +365,9 @@ def check_suspect():
 	for k in MemoryFlood:
 		MF = MemoryFlood[k]
 		#
-		#if MF['last_flag']=='[S]' and MF['flag_count'] >= Options[crc32b('-M')]['value']:
-		#if MF['last_flag']==Options[crc32b('-F')]['value'] and MF['flag_count'] >= Options[crc32b('-M')]['value']:
 		if MF['last_flag'] in Globals['flags'] and (MF['flag_count'] >= Options[crc32b('-M')]['value'] or MF['flag_count_sr'] >= Options[crc32b('-M')]['value']):
 			out("check_suspect() WARNING k: {}, MF: {}".format( k, MF ))
+			print("check_suspect() WARNING k: {}, MF: {}".format( k, MF['k'] ))
 			#
 			if exists_block(k,MF):
 				#out("Already blocked! {} - {}".format( k, MF['fto'] ))
@@ -388,11 +401,17 @@ def parse( line:str ):
 	#
 	sip = ".".join(a[2].split(".")[:4]) # source ip
 	csip = crc32b(sip)
-	if sip in Globals["allowed"]:
-		#out("Skipping us... {}",sip)
-		return False
 	dip = ".".join(a[4].split(".")[:4])
-	#out("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
+	#cdip = crc32b(dip)
+	#
+	if sip in Globals["allowed"]:
+		#print("Allowed sip: {}, dip: {}".format(sip,dip))
+		return False
+	#
+	if Options[crc32b('-D')]['value'] and csip in CheckBlockV4:
+		print("Already blocked src: {}, dst: {}".format( sip, dip ))
+		return True
+	#print("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	Stats["all"]+=1
 	# Check if sip between allowed, lets skip it so we wont block our selfs... :*
 	#
@@ -483,20 +502,48 @@ def parse( line:str ):
 			"cftf":{csip:{"ipv4":sip,"count":1,"count_sr":(1 if flag in Globals["flags"] else 0),"flags":[flag]},}, # objects of crc32b=ipv4={"ipv4":"....",..}
 		}
 	#
+	rst=False
 	if csip not in oftt[cftt]['cftf']:
 		#print("parse() Adding sip {}".format(sip))
 		oftt[cftt]['cftf'][csip] = {"ipv4":sip,"count":1,"count_sr":(1 if flag in Globals["flags"] else 0),"flags":[flag]}
 	else:
-		oftt[cftt]['cftf'][csip]['count']+=1
+		#
 		pflag = oftt[cftt]['cftf'][csip]['flags'][ len(oftt[cftt]['cftf'][csip]['flags'])-1 ]
 		#
 		if pflag=='[S]' and flag=='[R]' or pflag=='[R]' and flag=='[S]':
 			oftt[cftt]['cftf'][csip]['count_sr']+=1
 		else:
 			oftt[cftt]['cftf'][csip]['count_sr']=0
+			rst=True
+		#
+		if flag=='[S]':
+			oftt[cftt]['cftf'][csip]['count']+=1
+		elif rst:
+			oftt[cftt]['cftf'][csip]['count']=0
+		#
 		if len(oftt[cftt]['cftf'][csip]['flags'])>=4:
 			oftt[cftt]['cftf'][csip]['flags'].pop()
 		oftt[cftt]['cftf'][csip]['flags'].append( flag )
+		#--
+		# 27.3.2026
+		# Check specific IP. Another way so no need to block whole range.
+		if Options[crc32b('-s')]['value'] and ( oftt[cftt]['cftf'][csip]['count'] >= Options[crc32b('-m')]['value'] or oftt[cftt]['cftf'][csip]['count_sr'] >= Options[crc32b('-r')]['value'] ):
+			print("Warning({} | {}={}): src: {} attacking({}|{}), dst: {}".format(fto,ftt,len(oftt[cftt]['cftf']),sip,oftt[cftt]['cftf'][csip]['count'],oftt[cftt]['cftf'][csip]['count_sr'],dip))
+			#block_ip()
+			#CheckBlockV4[csip] = True
+			CheckBlockV4[csip] = {
+				"csip":csip,
+				"sip" :sip,
+				"dip" :dip,
+				
+			}
+			print("range count [S]: {}, [S],[R]: {}".format( MemoryFlood[cfto]['flag_count'], MemoryFlood[cfto]['flag_count_sr'] ))
+			print("cftf( {} ): {}".format( len(oftt[cftt]['cftf']), oftt[cftt]['cftf'] ))
+			Stats['single_blocking'] += 1
+		elif Options[crc32b('-s')]['value'] and csip in CheckBlockV4 and ( oftt[cftt]['cftf'][csip]['count'] < Options[crc32b('-m')]['value'] and oftt[cftt]['cftf'][csip]['count_sr'] < Options[crc32b('-r')]['value'] ):
+			print("unblocking ",sip)
+		#	print("Warning() Unblocking blocked single ip {}".format( sip ))
+		#	del(CheckBlockV4[csip])
 	#
 	MemoryFlood[cfto]["ftt"] = oftt
 	return True
@@ -572,6 +619,8 @@ def main(argv):
 	#sys.exit(1)
 	#
 	start()
+	#
+	print("MemoryBlock: ",MemoryBlock)
 
 #--
 if __name__ == '__main__':
