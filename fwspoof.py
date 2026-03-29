@@ -194,6 +194,7 @@ Stats = {
 	"all":0,
 	"uniq":0,
 	"single_blocking":0,
+	"single_already":0,
 	"blocking":0,
 	"unblocking":0,
 	"blocked":0,
@@ -410,6 +411,7 @@ def parse( line:str ):
 	#
 	if Options[crc32b('-D')]['value'] and csip in CheckBlockV4:
 		print("Already blocked src: {}, dst: {}".format( sip, dip ))
+		Stats['single_already'] += 1
 		return True
 	#print("parse() sip: {} {} dip: {}".format( sip, a[3], dip ))
 	Stats["all"]+=1
