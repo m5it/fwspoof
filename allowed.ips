@@ -1,0 +1,11 @@
+# FWSpoof Allowed IPs Whitelist
+# Add IP addresses here to skip processing (one per line)
+# Lines starting with # are comments
+
+# Example: Local network gateway
+# 192.168.1.1
+
+# Example: Trusted monitoring server
+# 10.0.0.50
+
+# Add your whitelisted IPs below

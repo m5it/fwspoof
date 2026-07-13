@@ -1,0 +1,20 @@
+# FWSpoof Configuration File
+# This is the default configuration. Command line arguments override these values.
+
+# Attack detection thresholds
+max_flag_count: 20              # Global threshold for SYN/SYN+RESET attacks
+max_flag_count_per_cidr: 3      # Per-range SYN threshold
+max_flag_count_per_cidr_sr: 5   # Per-range SYN+RESET threshold
+
+# Connection type for iptables (INPUT, FORWARD, OUTPUT)
+connection_type: "FORWARD"
+
+# TCP flags to monitor (comma-separated)
+flags: "[S],[R]"
+
+# Behavior settings
+dont_unblock: false    # Once blocked, stay blocked (no auto-unblock)
+test_mode: false       # Test mode - don't execute iptables commands
+specific_ip: false     # Block specific IPs instead of ranges
+verbose: false         # Enable verbose output
+show_stats: false      # Show statistics at exit
