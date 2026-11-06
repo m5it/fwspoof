@@ -265,10 +265,10 @@ def main() -> int:
             if attack_info is None:
                 continue
             
-            # Handle blocking
-            info(f"Attack detected from {attack_info['fto']}")
+            # Handle blocking (AttackResult is a dataclass)
+            info(f"Attack detected from {attack_info.fto}")
             
-            for subnet in attack_info['subnets']:
+            for subnet in attack_info.subnets:
                 if config.specific_ip:
                     # Block specific IP
                     if blocker.block_specific_ip(subnet['sip']):
@@ -286,7 +286,7 @@ def main() -> int:
         for key in list(detector.ranges.keys()):
             attack_info = detector.check_attack(key)
             if attack_info:
-                for subnet in attack_info['subnets']:
+                for subnet in attack_info.subnets:
                     if not config.specific_ip:
                         if blocker.block_cidr(subnet['cidr'], subnet['ftt'], subnet['ftt']):
                             stats.increment('range_blocking')

@@ -115,6 +115,11 @@ class IPBlocker:
         except Exception as e:
             warning(f"Error loading iptables rules: {e}")
             return 0
+
+    # Alias for backwards compatibility with main.py
+    def load_existing_blocks(self) -> int:
+        """Alias for load_blocks()."""
+        return self.load_blocks()
     
     def _process_loaded_cidr(self, cidr: str) -> int:
         """Process a loaded CIDR entry."""
@@ -147,6 +152,19 @@ class IPBlocker:
             return self._block_range(cidr_or_ip, fto, ftt)
         else:
             return self._block_specific(cidr_or_ip, fto, ftt)
+
+    # Compatibility aliases used by main.py
+    def block_cidr(self, cidr: str, fto: str = "", ftt: str = "") -> bool:
+        """Alias for blocking a CIDR range."""
+        return self._block_range(cidr, fto, ftt)
+
+    def block_specific_ip(self, sip: str, fto: str = "", ftt: str = "") -> bool:
+        """Alias for blocking a specific IP."""
+        return self._block_specific(sip, fto, ftt)
+
+    def unblock_cidr(self, cidr: str, fto: str = "") -> bool:
+        """Alias for unblocking a CIDR range."""
+        return self._unblock_range(cidr, fto)
     
     def _block_range(self, cidr: str, fto: str = "", ftt: str = "") -> bool:
         """Block an IP range (/24 CIDR)."""

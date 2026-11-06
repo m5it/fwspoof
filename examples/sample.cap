@@ -1,10 +1,12 @@
-# Sample tcpdump capture for testing FWSpoof
-# This is a text representation - for actual testing use:
-#   tcpdump -i eth0 -w examples/sample.cap -c 100
-# 
-# Example tcpdump output format that FWSpoof parses:
-#
-# 14:50:53.440085 IP 192.168.1.100.54321 > 10.0.0.1.443: Flags [S], seq 12345, win 64240, length 0
-# 14:50:53.441000 IP 10.0.0.1.443 > 192.168.1.100.54321: Flags [S.], seq 67890, ack 12346, win 65535, length 0
-# 14:50:54.123456 IP 192.168.1.101.54322 > 10.0.0.1.443: Flags [S], seq 12346, win 64240, length 0
-# 14:50:55.000001 IP 192.168.1.102.54323 > 10.0.0.1.443: Flags [S], seq 12347, win 64240, length 0
+14:50:53.440085 IP 192.168.1.100.54321 > 10.0.0.1.443: Flags [S], seq 12345, win 64240, length 0
+14:50:53.440186 IP 192.168.1.101.54322 > 10.0.0.1.443: Flags [S], seq 12346, win 64240, length 0
+14:50:53.440287 IP 192.168.1.102.54323 > 10.0.0.1.443: Flags [S], seq 12347, win 64240, length 0
+14:50:53.440388 IP 192.168.1.103.54324 > 10.0.0.1.443: Flags [S], seq 12348, win 64240, length 0
+14:50:53.440489 IP 192.168.1.104.54325 > 10.0.0.1.443: Flags [S], seq 12349, win 64240, length 0
+14:50:53.441000 IP 10.0.0.1.443 > 192.168.1.100.54321: Flags [S.], seq 67890, ack 12346, win 65535, length 0
+14:50:54.123456 IP 10.0.0.50.12345 > 192.168.1.1.80: Flags [R], seq 0, win 0, length 0
+14:50:54.223456 IP 10.0.0.50.12346 > 192.168.1.1.80: Flags [S], seq 0, win 0, length 0
+14:50:54.323456 IP 10.0.0.50.12347 > 192.168.1.1.80: Flags [R], seq 0, win 0, length 0
+14:50:54.423456 IP 10.0.0.50.12348 > 192.168.1.1.80: Flags [S], seq 0, win 0, length 0
+14:50:54.523456 IP 10.0.0.50.12349 > 192.168.1.1.80: Flags [R], seq 0, win 0, length 0
+14:50:55.000001 IP 192.168.1.200.54321 > 10.0.0.1.443: Flags [S], seq 12345, win 64240, options [mss 1460,sackOK,TS val 12345 ecr 0,nop,wscale 7], length 0
