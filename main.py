@@ -277,45 +277,34 @@ def main() -> int:
 
             stats.record_packet(packet)
             
-            # Process packet in detector
-            range_key = detector.process_packet(packet)
-            if range_key is None:
-                continue
-            
-            # Check for attack
-            attack_info = detector.check_attack(range_key)
-            if attack_info is None:
-                continue
-            
-            # Handle blocking (AttackResult is a dataclass)
-            info(f"Attack detected from {attack_info.fto}")
-            
-            for subnet in attack_info.subnets:
-                if config.specific_ip:
-                    # Block specific IP
-                    if blocker.is_ip_blocked(subnet['sip']):
-                        stats.record_block(is_range=False, is_new=False)
-                    elif blocker.block_specific_ip(subnet['sip'], attack_info.fto, subnet['ftt']):
-                        stats.record_block(is_range=False, is_new=True)
-                        info(f"Blocked IP: {subnet['sip']}")
-                else:
-                    # Block CIDR range - pass correct fto and ftt
-                    if blocker.is_blocked(subnet['cidr']):
-                        stats.record_block(is_range=True, is_new=False)
-                    elif blocker.block_cidr(subnet['cidr'], attack_info.fto, subnet['ftt']):
-                        stats.record_block(is_range=True, is_new=True)
-                        info(f"Blocked range: {subnet['cidr']}")
+            # Process packet in detector (collect only, like old parse() then check_suspect() after)
+            detector.process_packet(packet)
                     
-        # Final check for any remaining blocks to process (replicates old check_suspect after all packets)
-        for key in list(detector.ranges.keys()):
-            attack_info = detector.check_attack(key)
-            if attack_info:
-                for subnet in attack_info.subnets:
-                    if not config.specific_ip:
+        # Final check - replicates old check_suspect() (after all packets) and specific-IP handling
+        # For range mode: check_attack per fto then block per subnet (like old perform_block)
+        # For specific IP mode: iterate all IPs and use check_specific_ip_attack
+        if config.specific_ip:
+            for fto_key, rng in detector.ranges.items():
+                for subnet_key, subnet in rng.subnets.items():
+                    for ip_key, ip_stat in subnet.ips.items():
+                        info_obj = detector.check_specific_ip_attack(ip_stat.sip, subnet.ftt)
+                        if info_obj:
+                            if blocker.is_ip_blocked(ip_stat.sip):
+                                stats.record_block(is_range=False, is_new=False)
+                            elif blocker.block_specific_ip(ip_stat.sip, rng.fto, subnet.ftt):
+                                stats.record_block(is_range=False, is_new=True)
+                                info(f"Blocked IP: {ip_stat.sip} ({ip_stat.count}/{ip_stat.count_sr})")
+        else:
+            for key in list(detector.ranges.keys()):
+                attack_info = detector.check_attack(key)
+                if attack_info:
+                    info(f"Attack detected from {attack_info.fto} syn={attack_info.total_syn} sr={attack_info.total_sr}")
+                    for subnet in attack_info.subnets:
                         if blocker.is_blocked(subnet['cidr']):
-                            continue
-                        if blocker.block_cidr(subnet['cidr'], attack_info.fto, subnet['ftt']):
+                            stats.record_block(is_range=True, is_new=False)
+                        elif blocker.block_cidr(subnet['cidr'], attack_info.fto, subnet['ftt']):
                             stats.record_block(is_range=True, is_new=True)
+                            info(f"Blocked range: {subnet['cidr']} syn={subnet['syn_count']} sr={subnet['sr_count']}")
                         
     except KeyboardInterrupt:
         info("Interrupted by user")

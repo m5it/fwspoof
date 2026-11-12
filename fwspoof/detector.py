@@ -265,9 +265,7 @@ class AttackDetector:
         elif rst:
             stats.flag_count = 1
             stats.last_flag = flag
-        # Fix old bug: ensure last_flag is always updated to current flag after processing
-        # (old kept stale on SR, breaking subsequent SR detection)
-        stats.last_flag = flag
+        stats.last_timestamp = current_time
 
         # --- Subnet level (ftt) update - matches original oftt[cftt] logic ---
         subnet = stats.get_or_create_subnet(packet.ftt)
@@ -343,23 +341,20 @@ class AttackDetector:
         stats = self.ranges[fto_key]
         config = self.config
 
-        # Global check: require last_flag in flags AND (global counts >= M) if global threshold is relevant.
-        # For compatibility with unit tests, we allow per-subnet detection even when global not met,
-        # but we still enforce last_flag check for SR mode.
-        # To mimic original behavior: global must be met; if not met, still allow per-subnet if flag_count_sr is relevant?
-        # For now, keep global check but relax to allow test scenarios: if global not exceeded, we still proceed
-        # to per-CIDR check (more sensitive). This matches user expectation of blocking per /24 without needing global 20.
-        # Uncomment strict check below to restore original strict behavior:
-        # if stats.last_flag not in config.flag_list:
-        #     return None
-        # if not (stats.flag_count >= config.max_flag_count or stats.flag_count_sr >= config.max_flag_count):
-        #     return None
+        # Replicate old check_suspect global condition exactly:
+        #   MF['last_flag'] in Globals['flags'] and (flag_count >= M or flag_count_sr >= M)
+        if stats.last_flag not in config.flag_list:
+            return None
+        if not (stats.flag_count >= config.max_flag_count or stats.flag_count_sr >= config.max_flag_count):
+            return None
 
         # Per-CIDR check - replicate perform_block: per subnet (ftt) thresholds
+        # Old bug: uses -m for both S and S,R: MFF['flag_count_sr'] >= -m (not -r)
+        # Keeping bug for exact parity; fix to use max_flag_count_per_cidr_sr if you want correct behavior
         attacking_subnets = []
         for subnet_key, subnet in stats.subnets.items():
             syn_threshold = subnet.flag_count >= config.max_flag_count_per_cidr
-            sr_threshold = subnet.flag_count_sr >= config.max_flag_count_per_cidr_sr
+            sr_threshold = subnet.flag_count_sr >= config.max_flag_count_per_cidr  # old bug, should be per_cidr_sr
             if syn_threshold or sr_threshold:
                 cidr = f"{subnet.ftt}.0/24"
                 # pick a representative sip from subnet (first IP) for compatibility
