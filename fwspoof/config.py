@@ -52,6 +52,10 @@ class Config:
     # Monitoring flags
     flags: str = "[S],[R]"
     
+    # iptables comment tagging
+    iptables_comment: bool = True
+    iptables_comment_prefix: str = "fwspoof"
+    
     # Allowed IPs (loaded from file)
     allowed_ips: List[str] = field(default_factory=list)
     
@@ -127,9 +131,9 @@ class Config:
         config = cls()
         
         # Map of field names to their types
-        bool_fields = {'dont_unblock', 'test_mode', 'specific_ip', 'verbose', 'show_stats'}
+        bool_fields = {'dont_unblock', 'test_mode', 'specific_ip', 'verbose', 'show_stats', 'iptables_comment'}
         int_fields = {'max_flag_count', 'max_flag_count_per_cidr', 'max_flag_count_per_cidr_sr'}
-        str_fields = {'connection_type', 'flags'}
+        str_fields = {'connection_type', 'flags', 'iptables_comment_prefix'}
         
         for field_name in cls.__dataclass_fields__:
             if field_name in ('allowed_ips', 'ENV_PREFIX'):

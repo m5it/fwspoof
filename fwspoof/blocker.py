@@ -27,6 +27,7 @@ class BlockedEntry:
     timestamp: float = field(default_factory=time.time)
     block_type: BlockType = BlockType.RANGE
     hit_count: int = 0
+    comment: str = ""
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -44,6 +45,9 @@ class IPBlocker:
     """Manages IP blocking via iptables."""
     
     IPTABLES_DROP_PATTERN = re.compile(r'^DROP\s+all\s+--\s+(\S+)\s+0\.0\.0\.0/0')
+    # iptables -S format: -A CHAIN -s CIDR -m comment --comment "fwspoof:..." -j DROP
+    IPTABLES_S_PATTERN = re.compile(r'^-A\s+\S+\s+-s\s+(\S+).*--comment\s+"([^"]+)".*-j\s+DROP')
+    IPTABLES_S_FALLBACK = re.compile(r'^-A\s+\S+\s+-s\s+(\S+).* -j\s+DROP')
     
     def __init__(self, config: Optional[Config] = None):
         self.config = config or get_config()
@@ -63,6 +67,19 @@ class IPBlocker:
     def _crc32_key(self, text: str) -> str:
         """Generate CRC32 hash key."""
         return format(zlib.crc32(text.encode('utf-8')) & 0xFFFFFFFF, 'x')
+
+    def _make_comment(self, cidr: str) -> str:
+        """Build iptables comment for a blocked entry."""
+        if not self.config.iptables_comment:
+            return ""
+        prefix = self.config.iptables_comment_prefix or "fwspoof"
+        # Keep under 256 chars, deterministic for re-delete
+        # e.g. "fwspoof:192.168.1.0/24" - easy to grep
+        comment = f"{prefix}:{cidr}"
+        # iptables comment max 256, we are well below
+        if len(comment) > 256:
+            comment = comment[:256]
+        return comment
     
     def _run_iptables(self, command: List[str]) -> bool:
         """Run iptables command."""
@@ -93,35 +110,70 @@ class IPBlocker:
             debug("Skipping iptables load (test mode or not available)")
             return 0
         
-        try:
-            output = subprocess.check_output(
-                ['iptables', '-L', self.config.connection_type, '-n'],
-                stderr=subprocess.DEVNULL, text=True
-            )
-            
-            count = 0
-            for line in output.split('\n'):
-                match = self.IPTABLES_DROP_PATTERN.match(line.strip())
-                if match:
-                    cidr = match.group(1)
-                    count += self._process_loaded_cidr(cidr)
-            
-            info(f"Loaded {count} existing blocks from iptables")
-            return count
-            
-        except subprocess.CalledProcessError as e:
-            warning(f"Failed to load iptables rules: {e}")
-            return 0
-        except Exception as e:
-            warning(f"Error loading iptables rules: {e}")
-            return 0
+        # Prefer iptables -S (shows comments) to identify fwspoof rules
+        # Fall back to iptables -L if -S unavailable
+        for cmd in (
+            ['iptables', '-S', self.config.connection_type],
+            ['iptables', '-L', self.config.connection_type, '-n'],
+        ):
+            try:
+                output = subprocess.check_output(
+                    cmd,
+                    stderr=subprocess.DEVNULL, text=True
+                )
+                count = 0
+                for line in output.split('\n'):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    # Try -S format with comment first
+                    m = self.IPTABLES_S_PATTERN.match(line)
+                    if m:
+                        cidr, comment = m.group(1), m.group(2)
+                        # Only manage our own commented rules
+                        if self.config.iptables_comment:
+                            prefix = (self.config.iptables_comment_prefix or "fwspoof")
+                            if not comment.startswith(prefix):
+                                continue
+                        count += self._process_loaded_cidr(cidr, comment)
+                        continue
+                    # Fallback without comment (old rules)
+                    m2 = self.IPTABLES_S_FALLBACK.match(line)
+                    if m2:
+                        cidr = m2.group(1)
+                        # When comment mode enabled, ignore non-commented rules
+                        if self.config.iptables_comment:
+                            continue
+                        count += self._process_loaded_cidr(cidr, "")
+                        continue
+                    # Legacy -L format
+                    m3 = self.IPTABLES_DROP_PATTERN.match(line)
+                    if m3:
+                        cidr = m3.group(1)
+                        if self.config.iptables_comment:
+                            continue
+                        count += self._process_loaded_cidr(cidr, "")
+                
+                info(f"Loaded {count} existing blocks from iptables ({' '.join(cmd)})")
+                return count
+                
+            except subprocess.CalledProcessError:
+                continue
+            except FileNotFoundError:
+                continue
+            except Exception as e:
+                warning(f"Error loading iptables rules: {e}")
+                return 0
+        
+        warning("Failed to load iptables rules via -S or -L")
+        return 0
 
     # Alias for backwards compatibility with main.py
     def load_existing_blocks(self) -> int:
         """Alias for load_blocks()."""
         return self.load_blocks()
     
-    def _process_loaded_cidr(self, cidr: str) -> int:
+    def _process_loaded_cidr(self, cidr: str, comment: str = "") -> int:
         """Process a loaded CIDR entry."""
         if '/' in cidr:
             ip_parts = cidr.split('.')
@@ -129,9 +181,9 @@ class IPBlocker:
                 return 0
             fto = '.'.join(ip_parts[:2])
             ftt = '.'.join(ip_parts[:3])
-            key = self._crc32_key(fto)
+            key = self._crc32_key(cidr)  # per-CIDR to allow multiple /24 per /16
             self.blocked[key] = BlockedEntry(
-                cidr=cidr, fto=fto, ftt=ftt, timestamp=0, block_type=BlockType.RANGE
+                cidr=cidr, fto=fto, ftt=ftt, timestamp=0, block_type=BlockType.RANGE, comment=comment
             )
             return 1
         else:
@@ -142,7 +194,7 @@ class IPBlocker:
             ftt = '.'.join(ip_parts[:3])
             key = self._crc32_key(cidr)
             self.blocked_ips[key] = BlockedEntry(
-                cidr=cidr, fto=fto, ftt=ftt, timestamp=0, block_type=BlockType.SPECIFIC
+                cidr=cidr, fto=fto, ftt=ftt, timestamp=0, block_type=BlockType.SPECIFIC, comment=comment
             )
             return 1
     
@@ -176,18 +228,23 @@ class IPBlocker:
             fto = '.'.join(ip_parts[:2])
             ftt = '.'.join(ip_parts[:3])
         
-        key = self._crc32_key(fto)
+        key = self._crc32_key(cidr)
         
         if key in self.blocked:
             self.blocked[key].hit_count += 1
             debug(f"Range {cidr} already blocked")
             return True
         
-        if not self._run_iptables(['-A', self.config.connection_type, '-s', cidr, '-j', 'DROP']):
+        comment = self._make_comment(cidr)
+        cmd = ['-A', self.config.connection_type, '-s', cidr]
+        if comment:
+            cmd += ['-m', 'comment', '--comment', comment]
+        cmd += ['-j', 'DROP']
+        if not self._run_iptables(cmd):
             return False
         
-        self.blocked[key] = BlockedEntry(cidr=cidr, fto=fto, ftt=ftt, block_type=BlockType.RANGE)
-        info(f"Blocked range: {cidr}")
+        self.blocked[key] = BlockedEntry(cidr=cidr, fto=fto, ftt=ftt, block_type=BlockType.RANGE, comment=comment)
+        info(f"Blocked range: {cidr} comment:{comment}")
         return True
     
     def _block_specific(self, sip: str, fto: str = "", ftt: str = "") -> bool:
@@ -207,11 +264,16 @@ class IPBlocker:
             debug(f"IP {sip} already blocked")
             return True
         
-        if not self._run_iptables(['-A', self.config.connection_type, '-s', sip, '-j', 'DROP']):
+        comment = self._make_comment(sip)
+        cmd = ['-A', self.config.connection_type, '-s', sip]
+        if comment:
+            cmd += ['-m', 'comment', '--comment', comment]
+        cmd += ['-j', 'DROP']
+        if not self._run_iptables(cmd):
             return False
         
-        self.blocked_ips[key] = BlockedEntry(cidr=sip, fto=fto, ftt=ftt, block_type=BlockType.SPECIFIC)
-        info(f"Blocked IP: {sip}")
+        self.blocked_ips[key] = BlockedEntry(cidr=sip, fto=fto, ftt=ftt, block_type=BlockType.SPECIFIC, comment=comment)
+        info(f"Blocked IP: {sip} comment:{comment}")
         return True
     
     def unblock_ip(self, cidr_or_ip: str, fto: str = "") -> bool:
@@ -229,12 +291,24 @@ class IPBlocker:
                 return False
             fto = '.'.join(ip_parts[:2])
         
-        key = self._crc32_key(fto)
+        key = self._crc32_key(cidr)
         
         if key not in self.blocked:
             return True
         
-        if not self._run_iptables(['-D', self.config.connection_type, '-s', cidr, '-j', 'DROP']):
+        # Try with comment first (exact rule), fallback without
+        entry = self.blocked[key]
+        comment = entry.comment or self._make_comment(cidr)
+        cmds = []
+        if comment:
+            cmds.append(['-D', self.config.connection_type, '-s', cidr, '-m', 'comment', '--comment', comment, '-j', 'DROP'])
+        cmds.append(['-D', self.config.connection_type, '-s', cidr, '-j', 'DROP'])
+        success = False
+        for cmd in cmds:
+            if self._run_iptables(cmd):
+                success = True
+                break
+        if not success:
             return False
         
         del self.blocked[key]
@@ -248,7 +322,18 @@ class IPBlocker:
         if key not in self.blocked_ips:
             return True
         
-        if not self._run_iptables(['-D', self.config.connection_type, '-s', sip, '-j', 'DROP']):
+        entry = self.blocked_ips[key]
+        comment = entry.comment or self._make_comment(sip)
+        cmds = []
+        if comment:
+            cmds.append(['-D', self.config.connection_type, '-s', sip, '-m', 'comment', '--comment', comment, '-j', 'DROP'])
+        cmds.append(['-D', self.config.connection_type, '-s', sip, '-j', 'DROP'])
+        success = False
+        for cmd in cmds:
+            if self._run_iptables(cmd):
+                success = True
+                break
+        if not success:
             return False
         
         del self.blocked_ips[key]
@@ -258,19 +343,25 @@ class IPBlocker:
     def is_blocked(self, cidr_or_ip: str) -> bool:
         """Check if an IP or range is blocked."""
         if '/' in cidr_or_ip:
-            ip_parts = cidr_or_ip.split('.')
-            if len(ip_parts) < 2:
-                return False
-            fto = '.'.join(ip_parts[:2])
-            key = self._crc32_key(fto)
+            key = self._crc32_key(cidr_or_ip)
             return key in self.blocked
         else:
             key = self._crc32_key(cidr_or_ip)
             return key in self.blocked_ips
     
     def is_range_blocked(self, fto: str) -> bool:
-        """Check if a range (by fto) is blocked."""
+        """Check if a range (by fto) is blocked - legacy checks any /24 under fto."""
+        # New storage is per-CIDR, so check any entry with matching fto
+        for entry in self.blocked.values():
+            if entry.fto == fto:
+                return True
+        # Fallback old key check
         key = self._crc32_key(fto)
+        return key in self.blocked
+
+    def is_cidr_blocked(self, cidr: str) -> bool:
+        """Check if a specific CIDR is blocked."""
+        key = self._crc32_key(cidr)
         return key in self.blocked
     
     def is_ip_blocked(self, sip: str) -> bool:
@@ -285,7 +376,10 @@ class IPBlocker:
         
         to_unblock = []
         for key, entry in list(self.blocked.items()):
-            if key not in active_suspects:
+            # Keys are now per-CIDR; map back to fto for suspect comparison
+            fto_key = self._crc32_key(entry.fto)
+            if fto_key not in active_suspects and key not in active_suspects:
+                # Also handle legacy where suspects could be CIDR keys
                 to_unblock.append(entry)
         return to_unblock
     

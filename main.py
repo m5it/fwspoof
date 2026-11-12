@@ -160,6 +160,18 @@ Examples:
         default='allowed.ips',
         help='Path to allowed IPs whitelist file (default: allowed.ips)'
     )
+
+    parser.add_argument(
+        '--no-comment',
+        action='store_true',
+        help='Disable iptables comment tagging'
+    )
+    
+    parser.add_argument(
+        '--comment-prefix',
+        default=None,
+        help='Prefix for iptables comment (default: fwspoof)'
+    )
     
     return parser.parse_args()
 
@@ -180,6 +192,10 @@ def create_config_from_args(args: argparse.Namespace) -> Config:
     config.dont_unblock = args.dont_unblock
     config.test_mode = args.test
     config.specific_ip = args.specific_ip
+    if args.no_comment:
+        config.iptables_comment = False
+    if args.comment_prefix:
+        config.iptables_comment_prefix = args.comment_prefix
     
     # Load allowed IPs from file
     config.allowed_ips = load_allowed_ips(args.allowed_ips)
@@ -284,7 +300,7 @@ def main() -> int:
                         info(f"Blocked IP: {subnet['sip']}")
                 else:
                     # Block CIDR range - pass correct fto and ftt
-                    if blocker.is_range_blocked(attack_info.fto):
+                    if blocker.is_blocked(subnet['cidr']):
                         stats.record_block(is_range=True, is_new=False)
                     elif blocker.block_cidr(subnet['cidr'], attack_info.fto, subnet['ftt']):
                         stats.record_block(is_range=True, is_new=True)
@@ -296,7 +312,7 @@ def main() -> int:
             if attack_info:
                 for subnet in attack_info.subnets:
                     if not config.specific_ip:
-                        if blocker.is_range_blocked(attack_info.fto):
+                        if blocker.is_blocked(subnet['cidr']):
                             continue
                         if blocker.block_cidr(subnet['cidr'], attack_info.fto, subnet['ftt']):
                             stats.record_block(is_range=True, is_new=True)

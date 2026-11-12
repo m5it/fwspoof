@@ -18,3 +18,7 @@ test_mode: false       # Test mode - don't execute iptables commands
 specific_ip: false     # Block specific IPs instead of ranges
 verbose: false         # Enable verbose output
 show_stats: false      # Show statistics at exit
+
+# iptables comment tagging (allows: iptables -S | grep fwspoof)
+iptables_comment: true
+iptables_comment_prefix: "fwspoof"
