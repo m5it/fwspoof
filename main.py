@@ -199,8 +199,14 @@ def cleanup(detector: AttackDetector, blocker: IPBlocker) -> None:
         for entry in to_unblock:
             info(f"Unblocking {entry.cidr}")
             if blocker.unblock_cidr(entry.cidr, entry.fto):
-                stats.increment('range_unblocking')
+                stats.record_unblock(is_range=True)
     
+    # Sync currently blocked count with actual blocker state
+    try:
+        stats.blocked = blocker.get_blocked_count()
+    except:
+        pass
+
     # Print statistics if requested
     if get_config().show_stats:
         stats.print_summary()
@@ -246,14 +252,14 @@ def main() -> int:
                 debug(f"Failed to parse: {line[:50]}...")
                 continue
             
-            stats.increment('all_packets')
-            
-            # Check if source IP is in allowed list - skip if so
+            # Check if source IP is in allowed list - skip if so (must be before stats, like old fwspoof.py:408)
             if is_allowed(packet, config.allowed_ips):
                 skipped_allowed += 1
                 if config.verbose and skipped_allowed <= 5:  # Limit verbose output
                     debug(f"Skipping allowed IP: {packet.sip}")
                 continue
+
+            stats.record_packet(packet)
             
             # Process packet in detector
             range_key = detector.process_packet(packet)
@@ -271,25 +277,29 @@ def main() -> int:
             for subnet in attack_info.subnets:
                 if config.specific_ip:
                     # Block specific IP
-                    if blocker.block_specific_ip(subnet['sip']):
-                        stats.increment('single_blocking')
+                    if blocker.is_ip_blocked(subnet['sip']):
+                        stats.record_block(is_range=False, is_new=False)
+                    elif blocker.block_specific_ip(subnet['sip'], attack_info.fto, subnet['ftt']):
+                        stats.record_block(is_range=False, is_new=True)
                         info(f"Blocked IP: {subnet['sip']}")
-                    else:
-                        stats.increment('single_already')
                 else:
-                    # Block CIDR range
-                    if blocker.block_cidr(subnet['cidr'], subnet['ftt'], subnet['ftt']):
-                        stats.increment('range_blocking')
+                    # Block CIDR range - pass correct fto and ftt
+                    if blocker.is_range_blocked(attack_info.fto):
+                        stats.record_block(is_range=True, is_new=False)
+                    elif blocker.block_cidr(subnet['cidr'], attack_info.fto, subnet['ftt']):
+                        stats.record_block(is_range=True, is_new=True)
                         info(f"Blocked range: {subnet['cidr']}")
                     
-        # Final check for any remaining blocks to process
+        # Final check for any remaining blocks to process (replicates old check_suspect after all packets)
         for key in list(detector.ranges.keys()):
             attack_info = detector.check_attack(key)
             if attack_info:
                 for subnet in attack_info.subnets:
                     if not config.specific_ip:
-                        if blocker.block_cidr(subnet['cidr'], subnet['ftt'], subnet['ftt']):
-                            stats.increment('range_blocking')
+                        if blocker.is_range_blocked(attack_info.fto):
+                            continue
+                        if blocker.block_cidr(subnet['cidr'], attack_info.fto, subnet['ftt']):
+                            stats.record_block(is_range=True, is_new=True)
                         
     except KeyboardInterrupt:
         info("Interrupted by user")
