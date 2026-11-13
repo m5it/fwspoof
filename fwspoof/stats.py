@@ -193,11 +193,11 @@ class Statistics:
             for flag, count in sorted(self.packets_by_flag.items()):
                 lines.append(f"    {flag:15} {count:,}")
         
-        # Add top attackers if any
+        # Add top IPs if any (renamed from Top Attackers - attacker definition is S-only or S,R alternating per fwspoof logic)
         if self.top_attackers:
             lines.extend([
                 "",
-                "  Top Attackers:",
+                "  Top IP by packets:",
             ])
             for ip, count in list(sorted(
                 self.top_attackers.items(),

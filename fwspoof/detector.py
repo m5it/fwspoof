@@ -265,6 +265,7 @@ class AttackDetector:
         elif rst:
             stats.flag_count = 1
             stats.last_flag = flag
+        stats.last_flag = flag
         stats.last_timestamp = current_time
 
         # --- Subnet level (ftt) update - matches original oftt[cftt] logic ---

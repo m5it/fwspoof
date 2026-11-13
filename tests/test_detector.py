@@ -198,9 +198,8 @@ class TestSYNFloodDetection(unittest.TestCase):
         self.assertIsNone(attack)
     
     def test_syn_flood_threshold_exact(self):
-        """Test SYN flood at exact threshold."""
-        # Send exactly threshold number of SYNs
-        for i in range(3):
+        """Test SYN flood at exact threshold - needs global M=5 and per-cidr 3, so send 5 (matches old fwspoof global gate)."""
+        for i in range(5):
             packet = create_syn_packet(f"192.168.1.{100+i}", 1000.0 + i)
             self.detector.process_packet(packet)
         
@@ -219,13 +218,13 @@ class TestSYNFloodDetection(unittest.TestCase):
     
     def test_syn_flood_multiple_ranges(self):
         """Test SYN flood in multiple ranges."""
-        # Range 1
-        for i in range(3):
+        # Range 1 - need 5 to meet global M=5
+        for i in range(5):
             packet = create_syn_packet(f"192.168.1.{100+i}", 1000.0 + i)
             self.detector.process_packet(packet)
         
         # Range 2
-        for i in range(3):
+        for i in range(5):
             packet = create_syn_packet(f"10.0.0.{100+i}", 2000.0 + i)
             self.detector.process_packet(packet)
         
@@ -285,9 +284,8 @@ class TestSYNResetDetection(unittest.TestCase):
         self.assertGreater(stats.flag_count_sr, 0)
     
     def test_syn_reset_threshold(self):
-        """Test SYN+RESET threshold triggering."""
-        # Create pattern: S-R-S-R-S-R
-        for i in range(6):
+        """Test SYN+RESET threshold triggering - need 40 to meet global M=20 with alternating pattern."""
+        for i in range(40):
             if i % 2 == 0:
                 packet = create_syn_packet(f"192.168.1.{100+i}", 1000.0 + i)
             else:
@@ -397,12 +395,10 @@ class TestDetectorStateManagement(unittest.TestCase):
             self.detector = AttackDetector()
     
     def test_get_suspect_keys(self):
-        """Test getting suspect keys."""
-        # Initially empty
+        """Test getting suspect keys - need 20 to meet global M=20."""
         self.assertEqual(len(self.detector.get_suspect_keys()), 0)
         
-        # Add some suspects
-        for i in range(3):
+        for i in range(20):
             packet = create_syn_packet(f"192.168.1.{100+i}", 1000.0 + i)
             self.detector.process_packet(packet)
         
@@ -410,8 +406,8 @@ class TestDetectorStateManagement(unittest.TestCase):
         self.assertGreater(len(self.detector.get_suspect_keys()), 0)
     
     def test_clear_suspect(self):
-        """Test clearing suspect."""
-        for i in range(3):
+        """Test clearing suspect - need 20 to meet global M=20."""
+        for i in range(20):
             packet = create_syn_packet(f"192.168.1.{100+i}", 1000.0 + i)
             self.detector.process_packet(packet)
         
@@ -484,9 +480,8 @@ class TestEdgeCases(unittest.TestCase):
         self.assertEqual(stats['total_ranges'], 0)
     
     def test_threshold_boundary(self):
-        """Test exact threshold boundary."""
-        # Exactly at threshold
-        for i in range(2):
+        """Test exact threshold boundary - need 3 to meet global M=3."""
+        for i in range(3):
             packet = create_syn_packet(f"192.168.1.{100+i}", 1000.0 + i)
             self.detector.process_packet(packet)
         
