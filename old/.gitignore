@@ -1,0 +1,9 @@
+dumps
+*.cap
+help.txt
+__pycache__
+test/*
+b
+b/*
+*.out
+allowed.ips
